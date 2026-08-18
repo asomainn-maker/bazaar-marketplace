@@ -171,3 +171,7 @@ create index if not exists idx_listings_category on public.listings(category_id)
 create index if not exists idx_orders_buyer on public.orders(buyer_id);
 create index if not exists idx_orders_seller on public.orders(seller_id);
 create index if not exists idx_ledger_user on public.ledger(user_id);
+
+-- Listings: şəkil dəstəyi
+alter table public.listings add column if not exists image_url text;
+

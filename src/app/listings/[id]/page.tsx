@@ -16,7 +16,7 @@ export default async function ListingPage({
 
   const { data: listing } = await admin
     .from("listings")
-    .select("id, title, description, price, status, seller_id, created_at, categories(name)")
+    .select("id, title, description, price, status, seller_id, created_at, image_url, categories(name)")
     .eq("id", id)
     .maybeSingle();
 
@@ -46,7 +46,13 @@ export default async function ListingPage({
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-12">
-        <div className="rounded-2xl border border-line bg-panel p-8">
+        <div className="rounded-2xl border border-line bg-panel overflow-hidden">
+          {listing.image_url && (
+            <div className="aspect-[16/9] bg-bg overflow-hidden">
+              <img src={listing.image_url} alt={listing.title} className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="p-8">
           <p className="text-[10px] uppercase tracking-widest text-mist mb-2">
             {(listing.categories as unknown as { name: string } | null)?.name ?? "Digər"}
           </p>
@@ -78,6 +84,7 @@ export default async function ListingPage({
                 Almaq üçün giriş edin
               </Link>
             )}
+          </div>
           </div>
         </div>
 

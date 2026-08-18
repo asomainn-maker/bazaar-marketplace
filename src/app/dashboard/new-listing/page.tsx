@@ -13,6 +13,8 @@ export default function NewListingPage() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -31,10 +33,23 @@ export default function NewListingPage() {
     setError(null);
     setLoading(true);
     try {
+      let image_url: string | null = null;
+      if (imageFile) {
+        const imgForm = new FormData();
+        imgForm.append("file", imageFile);
+        const imgRes = await fetch("/api/listings/image", { method: "POST", body: imgForm });
+        const imgData = await imgRes.json();
+        if (!imgRes.ok) {
+          setError(imgData.error || "Şəkil yüklənmədi");
+          setLoading(false);
+          return;
+        }
+        image_url = imgData.url;
+      }
       const res = await fetch("/api/listings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, price, category_id: categoryId || null }),
+        body: JSON.stringify({ title, description, price, category_id: categoryId || null, image_url }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -60,6 +75,24 @@ export default function NewListingPage() {
         <h1 className="font-display text-2xl mb-8">Satılığa çıxarın</h1>
 
         <form onSubmit={handleSubmit} className="rounded-2xl border border-line bg-panel p-6 space-y-4">
+          <label className="block">
+            <span className="text-xs text-mist mb-2 block">Şəkil (istəyə bağlı, tövsiyə olunur)</span>
+            <div className="rounded-xl border-2 border-dashed border-line hover:border-jade transition-colors overflow-hidden">
+              {imagePreview ? (
+                <img src={imagePreview} alt="" className="w-full h-48 object-cover" />
+              ) : (
+                <div className="h-32 flex items-center justify-center text-mist text-sm">Şəkil seçmək üçün klikləyin</div>
+              )}
+            </div>
+            <input
+              type="file" accept="image/*" className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                setImageFile(f);
+                setImagePreview(f ? URL.createObjectURL(f) : null);
+              }}
+            />
+          </label>
           <input
             value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Başlıq (məs. Valorant hesabı - Immortal)"
             className="w-full rounded-lg border border-line bg-bg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-jade"

@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Giriş tələb olunur" }, { status: 401 });
 
-  const { title, description, price, category_id } = await req.json();
+  const { title, description, price, category_id, image_url } = await req.json();
   if (typeof title !== "string" || !title.trim() || title.trim().length > 120) {
     return NextResponse.json({ error: "Başlıq 1-120 simvol olmalıdır" }, { status: 400 });
   }
@@ -25,8 +25,9 @@ export async function POST(req: NextRequest) {
       description: typeof description === "string" ? description.trim().slice(0, 2000) : null,
       price: numericPrice,
       category_id: category_id || null,
+      image_url: typeof image_url === "string" && image_url ? image_url : null,
     })
-    .select("id, title, description, price, status, created_at")
+    .select("id, title, description, price, status, image_url, created_at")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
