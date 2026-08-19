@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import HomeLogoutButton from "./home-logout-button";
+import NotificationBell from "./notification-bell";
+import SearchBar from "./search-bar";
 
 export const revalidate = 0;
 
@@ -45,16 +47,14 @@ export default async function Home({
         <div className="max-w-6xl mx-auto px-6 pt-6 pb-4 flex items-center justify-between gap-6">
           <Link href="/" className="font-display text-xl tracking-tight shrink-0">Bazar</Link>
 
-          <form action="/" className="flex-1 max-w-xl hidden sm:block">
-            <input
-              name="q" defaultValue={q ?? ""} placeholder="Nə axtarırsınız?"
-              className="w-full rounded-full border border-line bg-panel px-5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-jade"
-            />
-          </form>
+          <div className="flex-1 max-w-xl hidden sm:block">
+            <SearchBar initialQuery={q ?? ""} />
+          </div>
 
           <nav className="flex items-center gap-4 text-sm shrink-0">
             {user ? (
               <>
+                <NotificationBell />
                 <Link href="/dashboard" className="rounded-full bg-jade text-bg px-4 py-2 font-medium">Dashboard</Link>
                 <HomeLogoutButton />
               </>

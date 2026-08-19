@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import BuyButton from "./buy-button";
 import ListingTabs from "./listing-tabs";
+import MessageSellerButton from "./message-seller-button";
 
 export const revalidate = 0;
 
@@ -111,17 +112,20 @@ export default async function ListingPage({
 
           <div className="flex items-center justify-between border-t border-line pt-6">
             <span className="font-mono text-2xl text-jade-soft">${Number(listing.price).toFixed(2)}</span>
-            {listing.status !== "active" ? (
-              <span className="text-sm text-mist">Bu elan artıq satılıb</span>
-            ) : isOwnListing ? (
-              <span className="text-sm text-mist">Bu sizin elanınızdır</span>
-            ) : user ? (
-              <BuyButton listingId={listing.id} price={Number(listing.price)} />
-            ) : (
-              <Link href="/login" className="rounded-full bg-jade text-bg px-6 py-3 text-sm font-semibold">
-                Almaq üçün giriş edin
-              </Link>
-            )}
+            <div className="flex items-center gap-2">
+              {!isOwnListing && user && <MessageSellerButton sellerId={listing.seller_id} listingId={listing.id} />}
+              {listing.status !== "active" ? (
+                <span className="text-sm text-mist">Bu elan artıq satılıb</span>
+              ) : isOwnListing ? (
+                <span className="text-sm text-mist">Bu sizin elanınızdır</span>
+              ) : user ? (
+                <BuyButton listingId={listing.id} price={Number(listing.price)} />
+              ) : (
+                <Link href="/login" className="rounded-full bg-jade text-bg px-6 py-3 text-sm font-semibold">
+                  Almaq üçün giriş edin
+                </Link>
+              )}
+            </div>
           </div>
           </div>
         </div>

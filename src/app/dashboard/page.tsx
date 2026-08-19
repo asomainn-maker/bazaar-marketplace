@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureProfile } from "@/lib/profile-utils";
 import LogoutButton from "./logout-button";
+import NotificationBell from "../notification-bell";
 
 export const revalidate = 0;
 
@@ -54,6 +55,8 @@ export default async function DashboardPage() {
         <Link href="/" className="font-display text-lg flex items-center gap-2"><span className="text-mist">←</span> Bazar</Link>
         <div className="flex items-center gap-3 text-sm">
           <Link href={`/u/${profile.username}`} className="text-jade-soft hover:underline">@{profile.username}</Link>
+          <NotificationBell />
+          <Link href="/dashboard/messages" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">Mesajlar</Link>
           {profile.is_admin && (
             <Link href="/admin" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">Admin</Link>
           )}
