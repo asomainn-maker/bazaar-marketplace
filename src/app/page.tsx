@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import HomeLogoutButton from "./home-logout-button";
 
 export const revalidate = 0;
 
@@ -53,7 +54,10 @@ export default async function Home({
 
           <nav className="flex items-center gap-4 text-sm shrink-0">
             {user ? (
-              <Link href="/dashboard" className="rounded-full bg-jade text-bg px-4 py-2 font-medium">Dashboard</Link>
+              <>
+                <Link href="/dashboard" className="rounded-full bg-jade text-bg px-4 py-2 font-medium">Dashboard</Link>
+                <HomeLogoutButton />
+              </>
             ) : (
               <>
                 <Link href="/login" className="text-mist hover:text-paper">Giriş</Link>

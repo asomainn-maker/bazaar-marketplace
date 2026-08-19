@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureProfile } from "@/lib/profile-utils";
+import LogoutButton from "./logout-button";
 
 export const revalidate = 0;
 
@@ -50,6 +51,7 @@ export default async function DashboardPage() {
           {profile.is_admin && (
             <Link href="/admin" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">Admin</Link>
           )}
+          <LogoutButton />
         </div>
       </header>
 
