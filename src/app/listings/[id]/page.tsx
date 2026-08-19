@@ -34,6 +34,15 @@ export default async function ListingPage({
     .eq("seller_id", listing.seller_id)
     .eq("status", "completed");
 
+  const { data: reviewStats } = await admin
+    .from("reviews")
+    .select("rating")
+    .eq("reviewee_id", listing.seller_id);
+  const avgRating =
+    reviewStats && reviewStats.length > 0
+      ? reviewStats.reduce((s, r) => s + r.rating, 0) / reviewStats.length
+      : null;
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const isOwnListing = user?.id === listing.seller_id;
@@ -60,11 +69,12 @@ export default async function ListingPage({
 
           <div className="flex items-center gap-2 mb-6 text-sm">
             <span className="text-mist">Satıcı:</span>
-            <span className="text-jade-soft">@{seller?.username ?? "naməlum"}</span>
+            <Link href={`/u/${seller?.username}`} className="text-jade-soft hover:underline">@{seller?.username ?? "naməlum"}</Link>
             {seller?.is_verified_seller && (
               <span className="rounded-full bg-jade/10 text-jade text-[10px] px-2 py-0.5">✓ Doğrulanmış</span>
             )}
             <span className="text-mist">· {salesCount ?? 0} satış</span>
+            {avgRating !== null && <span className="text-gold">· ★ {avgRating.toFixed(1)}</span>}
           </div>
 
           {listing.description && (

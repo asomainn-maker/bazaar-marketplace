@@ -21,6 +21,7 @@ export default function OrderActions({
   autoReleaseAt,
   ticketId,
   ticketStatus,
+  existingReview,
 }: {
   orderId: string;
   status: string;
@@ -28,6 +29,7 @@ export default function OrderActions({
   autoReleaseAt: string | null;
   ticketId: string | null;
   ticketStatus: string | null;
+  existingReview: { id: string; rating: number; body: string | null } | null;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +37,9 @@ export default function OrderActions({
   const [disputeMessage, setDisputeMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState("");
+  const [rating, setRating] = useState(5);
+  const [reviewBody, setReviewBody] = useState("");
+  const [reviewSubmitted, setReviewSubmitted] = useState(!!existingReview);
   const router = useRouter();
 
   useEffect(() => {
@@ -87,6 +92,21 @@ export default function OrderActions({
     if (res.ok) {
       setMessages((prev) => [...prev, data.message]);
       setChatInput("");
+    }
+  }
+
+  async function submitReview() {
+    const res = await fetch(`/api/orders/${orderId}/review`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rating, body: reviewBody }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setReviewSubmitted(true);
+      router.refresh();
+    } else {
+      setError(data.error || "Rəy göndərilmədi");
     }
   }
 
@@ -147,6 +167,39 @@ export default function OrderActions({
             Mübahisəni göndər
           </button>
         </div>
+      )}
+
+      {isBuyer && status === "completed" && (
+        reviewSubmitted ? (
+          <div className="rounded-xl border border-line bg-bg/40 p-4">
+            <p className="text-xs uppercase tracking-widest text-jade mb-2">Rəyiniz göndərilib</p>
+            {existingReview && (
+              <>
+                <p className="text-sm mb-1">{"★".repeat(existingReview.rating)}{"☆".repeat(5 - existingReview.rating)}</p>
+                {existingReview.body && <p className="text-sm text-paper/80">{existingReview.body}</p>}
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-line bg-bg/40 p-4 space-y-3">
+            <p className="text-xs uppercase tracking-widest text-gold">Satıcıya rəy verin</p>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button key={n} onClick={() => setRating(n)} className={`text-2xl ${n <= rating ? "text-gold" : "text-line"}`}>★</button>
+              ))}
+            </div>
+            <textarea
+              value={reviewBody}
+              onChange={(e) => setReviewBody(e.target.value)}
+              placeholder="Təcrübənizi paylaşın (istəyə bağlı)…"
+              rows={2}
+              className="w-full rounded-lg border border-line bg-bg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-jade resize-none"
+            />
+            <button onClick={submitReview} className="rounded-full bg-jade text-bg font-semibold px-4 py-2 text-sm">
+              Rəyi göndər
+            </button>
+          </div>
+        )
       )}
 
       {ticketId && (

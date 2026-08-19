@@ -34,6 +34,10 @@ export default async function OrderPage({
     .order("created_at", { ascending: false })
     .maybeSingle();
 
+  const { data: existingReview } = isBuyer
+    ? await admin.from("reviews").select("id, rating, body").eq("order_id", order.id).maybeSingle()
+    : { data: null };
+
   return (
     <div className="min-h-screen">
       <header className="max-w-2xl mx-auto px-6 pt-8 flex items-center justify-between">
@@ -55,6 +59,7 @@ export default async function OrderPage({
             autoReleaseAt={order.auto_release_at}
             ticketId={ticket?.id ?? null}
             ticketStatus={ticket?.status ?? null}
+            existingReview={existingReview}
           />
         </div>
       </main>

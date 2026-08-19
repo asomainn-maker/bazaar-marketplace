@@ -46,7 +46,7 @@ export default async function DashboardPage() {
       <header className="max-w-4xl mx-auto px-6 pt-8 flex items-center justify-between">
         <Link href="/" className="font-display text-lg">Bazar</Link>
         <div className="flex items-center gap-3 text-sm">
-          <span className="text-jade-soft">@{profile.username}</span>
+          <Link href={`/u/${profile.username}`} className="text-jade-soft hover:underline">@{profile.username}</Link>
           {profile.is_admin && (
             <Link href="/admin" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">Admin</Link>
           )}
