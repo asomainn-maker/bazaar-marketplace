@@ -20,12 +20,17 @@ export async function POST(req: NextRequest) {
 
   const { data: sellerProfile } = await admin
     .from("profiles")
-    .select("phone_verified")
+    .select("phone, phone_verified")
     .eq("id", user.id)
     .maybeSingle();
   if (!sellerProfile?.phone_verified) {
     return NextResponse.json(
-      { error: "Elan yerləşdirmək üçün əvvəlcə telefon nömrənizi doğrulayın", code: "phone_not_verified" },
+      {
+        error: sellerProfile?.phone
+          ? "Telefon nömrəniz hələ admin tərəfindən təsdiqlənməyib"
+          : "Elan yerləşdirmək üçün əvvəlcə telefon nömrənizi göndərin",
+        code: "phone_not_verified",
+      },
       { status: 403 }
     );
   }

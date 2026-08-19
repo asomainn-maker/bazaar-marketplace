@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getTwilioClient, normalizePhone } from "@/lib/twilio";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizePhone } from "@/lib/phone-utils";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -13,15 +14,12 @@ export async function POST(req: NextRequest) {
   }
 
   const normalized = normalizePhone(phone.trim());
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("profiles")
+    .update({ phone: normalized, phone_verified: false })
+    .eq("id", user.id);
 
-  try {
-    const client = getTwilioClient();
-    await client.verify.v2
-      .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
-      .verifications.create({ to: normalized, channel: "sms" });
-    return NextResponse.json({ ok: true, phone: normalized });
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "SMS göndərilmədi";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json({ ok: true, phone: normalized });
 }

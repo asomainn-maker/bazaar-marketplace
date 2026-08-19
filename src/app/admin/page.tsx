@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import WithdrawalActions from "./withdrawal-actions";
+import PhoneVerificationActions from "./phone-verification-actions";
 
 export const revalidate = 0;
 
@@ -26,6 +27,13 @@ export default async function AdminPage() {
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 
+  const { data: pendingPhones } = await admin
+    .from("profiles")
+    .select("id, username, phone")
+    .not("phone", "is", null)
+    .eq("phone_verified", false)
+    .order("created_at", { ascending: false });
+
   const withdrawUserIds = [...new Set((withdrawals ?? []).map((w) => w.user_id))];
   let names: Record<string, string> = {};
   if (withdrawUserIds.length > 0) {
@@ -40,6 +48,22 @@ export default async function AdminPage() {
         <Link href="/dashboard" className="text-sm text-mist hover:text-paper">← Dashboard</Link>
       </header>
       <main className="max-w-3xl mx-auto px-6 py-12 space-y-10">
+        <div>
+          <h1 className="font-display text-2xl mb-5">Telefon təsdiqləri</h1>
+          <div className="space-y-3">
+            {(!pendingPhones || pendingPhones.length === 0) && <p className="text-sm text-mist">Gözləyən tələb yoxdur.</p>}
+            {(pendingPhones ?? []).map((p) => (
+              <div key={p.id} className="rounded-xl border border-line bg-panel p-4 flex items-center justify-between">
+                <div>
+                  <p className="font-medium">@{p.username}</p>
+                  <p className="text-xs text-mist font-mono">{p.phone}</p>
+                </div>
+                <PhoneVerificationActions userId={p.id} />
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div>
           <h1 className="font-display text-2xl mb-5">Açıq mübahisələr</h1>
           <div className="space-y-3">
