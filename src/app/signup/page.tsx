@@ -20,7 +20,7 @@ export default function SignupPage() {
       const supabase = createClient();
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) { setError(error.message); return; }
-      if (data.session) { router.push("/dashboard"); router.refresh(); }
+      if (data.session) { router.push("/"); router.refresh(); }
       else setDone(true);
     } catch {
       setError("Şəbəkə xətası. Bir az sonra yenidən cəhd edin.");

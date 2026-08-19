@@ -19,7 +19,7 @@ export default function LoginPage() {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { setError(error.message); return; }
-      router.push("/dashboard");
+      router.push("/");
       router.refresh();
     } catch {
       setError("Şəbəkə xətası. Bir az sonra yenidən cəhd edin.");
