@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import BuyButton from "./buy-button";
+import ListingTabs from "./listing-tabs";
 
 export const revalidate = 0;
 
@@ -16,7 +17,7 @@ export default async function ListingPage({
 
   const { data: listing } = await admin
     .from("listings")
-    .select("id, title, description, price, status, seller_id, created_at, image_url, categories(name)")
+    .select("id, title, description, price, status, seller_id, created_at, image_url, categories(name, slug)")
     .eq("id", id)
     .maybeSingle();
 
@@ -34,14 +35,45 @@ export default async function ListingPage({
     .eq("seller_id", listing.seller_id)
     .eq("status", "completed");
 
-  const { data: reviewStats } = await admin
+  const { data: reviews } = await admin
     .from("reviews")
-    .select("rating")
-    .eq("reviewee_id", listing.seller_id);
+    .select("rating, body, created_at, reviewer_id")
+    .eq("reviewee_id", listing.seller_id)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  const reviewerIds = [...new Set((reviews ?? []).map((r) => r.reviewer_id))];
+  let reviewerNames: Record<string, string> = {};
+  if (reviewerIds.length > 0) {
+    const { data: rp } = await admin.from("profiles").select("id, username").in("id", reviewerIds);
+    reviewerNames = Object.fromEntries((rp ?? []).map((p) => [p.id, p.username]));
+  }
+
   const avgRating =
-    reviewStats && reviewStats.length > 0
-      ? reviewStats.reduce((s, r) => s + r.rating, 0) / reviewStats.length
+    reviews && reviews.length > 0
+      ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
       : null;
+
+  const { data: questions } = await admin
+    .from("listing_questions")
+    .select("id, question, answer, asker_id, created_at")
+    .eq("listing_id", id)
+    .order("created_at", { ascending: false });
+
+  const askerIds = [...new Set((questions ?? []).map((q) => q.asker_id))];
+  let askerNames: Record<string, string> = {};
+  if (askerIds.length > 0) {
+    const { data: ap } = await admin.from("profiles").select("id, username").in("id", askerIds);
+    askerNames = Object.fromEntries((ap ?? []).map((p) => [p.id, p.username]));
+  }
+
+  const { data: otherListings } = await admin
+    .from("listings")
+    .select("id, title, price, image_url")
+    .eq("seller_id", listing.seller_id)
+    .eq("status", "active")
+    .neq("id", id)
+    .limit(4);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -67,7 +99,7 @@ export default async function ListingPage({
           </p>
           <h1 className="font-display text-3xl mb-3">{listing.title}</h1>
 
-          <div className="flex items-center gap-2 mb-6 text-sm">
+          <div className="flex items-center gap-2 mb-6 text-sm flex-wrap">
             <span className="text-mist">Satıcı:</span>
             <Link href={`/u/${seller?.username}`} className="text-jade-soft hover:underline">@{seller?.username ?? "naməlum"}</Link>
             {seller?.is_verified_seller && (
@@ -76,10 +108,6 @@ export default async function ListingPage({
             <span className="text-mist">· {salesCount ?? 0} satış</span>
             {avgRating !== null && <span className="text-gold">· ★ {avgRating.toFixed(1)}</span>}
           </div>
-
-          {listing.description && (
-            <p className="text-paper/90 leading-relaxed mb-6 whitespace-pre-wrap">{listing.description}</p>
-          )}
 
           <div className="flex items-center justify-between border-t border-line pt-6">
             <span className="font-mono text-2xl text-jade-soft">${Number(listing.price).toFixed(2)}</span>
@@ -98,10 +126,39 @@ export default async function ListingPage({
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-line p-6 text-sm text-mist">
-          <h2 className="text-paper font-display text-base mb-2">Necə qorunursunuz?</h2>
-          <p>Ödədiyiniz məbləğ dərhal satıcıya getmir. Siz məhsulu aldığınızı təsdiqləyəndən sonra pul satıcıya keçir. Problem olarsa, dəstək sistemi üzərindən mübahisə aça bilərsiniz.</p>
+        <div className="mt-6">
+          <ListingTabs
+            listingId={listing.id}
+            description={listing.description}
+            reviews={(reviews ?? []).map((r) => ({ ...r, username: reviewerNames[r.reviewer_id] ?? "istifadəçi" }))}
+            questions={(questions ?? []).map((q) => ({ ...q, username: askerNames[q.asker_id] ?? "istifadəçi" }))}
+            isLoggedIn={!!user}
+            isOwner={isOwnListing}
+          />
         </div>
+
+        {(otherListings ?? []).length > 0 && (
+          <div className="mt-10">
+            <h2 className="font-display text-lg mb-4">Satıcının digər elanları</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {(otherListings ?? []).map((l) => (
+                <Link key={l.id} href={`/listings/${l.id}`} className="rounded-xl border border-line bg-panel overflow-hidden hover:border-jade transition-colors flex">
+                  <div className="w-20 h-20 shrink-0 bg-bg overflow-hidden">
+                    {l.image_url ? (
+                      <img src={l.image_url} alt={l.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-mist">{l.title.slice(0,1).toUpperCase()}</div>
+                    )}
+                  </div>
+                  <div className="p-3 flex flex-col justify-center min-w-0">
+                    <p className="text-sm truncate">{l.title}</p>
+                    <p className="font-mono text-jade-soft text-sm">${Number(l.price).toFixed(2)}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

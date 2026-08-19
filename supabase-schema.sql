@@ -180,3 +180,34 @@ alter table public.listings add column if not exists image_url text;
 alter table public.profiles add column if not exists phone text;
 alter table public.profiles add column if not exists phone_verified boolean not null default false;
 
+
+-- Daha çox kateqoriya
+insert into public.categories (slug, name, sort_order) values
+  ('steam-hesablari', 'Steam hesabları', 5),
+  ('valorant', 'Valorant hesabları', 6),
+  ('pubg-mobile', 'PUBG Mobile', 7),
+  ('roblox', 'Roblox', 8),
+  ('fortnite', 'Fortnite', 9),
+  ('cs2', 'CS2 hesab/skin', 10),
+  ('lol', 'League of Legends', 11),
+  ('instagram', 'Instagram xidmətləri', 12),
+  ('tiktok', 'TikTok xidmətləri', 13),
+  ('youtube', 'YouTube xidmətləri', 14),
+  ('netflix-spotify', 'Netflix / Spotify', 15),
+  ('cd-key', 'Oyun CD-Key', 16),
+  ('diger', 'Digər', 99)
+on conflict (slug) do nothing;
+
+-- Elana sual-cavab (Soru & Cevap)
+create table if not exists public.listing_questions (
+  id uuid primary key default gen_random_uuid(),
+  listing_id uuid not null references public.listings(id) on delete cascade,
+  asker_id uuid not null references auth.users(id),
+  question text not null check (char_length(question) between 1 and 500),
+  answer text,
+  answered_at timestamptz,
+  created_at timestamptz not null default now()
+);
+alter table public.listing_questions enable row level security;
+create policy "Questions publicly viewable" on public.listing_questions for select using (true);
+create policy "Users can ask" on public.listing_questions for insert with check (auth.uid() = asker_id);

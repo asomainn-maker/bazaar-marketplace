@@ -24,6 +24,12 @@ export default async function DashboardPage() {
   const admin = createAdminClient();
   const profile = await ensureProfile(admin, user.id, user.email ?? "user");
 
+  const { data: phoneProfile } = await admin
+    .from("profiles")
+    .select("phone, phone_verified")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const { data: myListings } = await admin
     .from("listings")
     .select("id, title, price, status, created_at")
@@ -45,7 +51,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen">
       <header className="max-w-4xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/" className="font-display text-lg">Bazar</Link>
+        <Link href="/" className="font-display text-lg flex items-center gap-2"><span className="text-mist">←</span> Bazar</Link>
         <div className="flex items-center gap-3 text-sm">
           <Link href={`/u/${profile.username}`} className="text-jade-soft hover:underline">@{profile.username}</Link>
           {profile.is_admin && (
@@ -65,6 +71,34 @@ export default async function DashboardPage() {
             Cüzdan idarəsi
           </Link>
         </div>
+
+        {phoneProfile?.phone_verified ? (
+          <div className="rounded-2xl border border-line bg-panel p-6 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-jade mb-1">✓ Telefon təsdiqlənib</p>
+              <p className="font-mono text-sm">{phoneProfile.phone}</p>
+            </div>
+            <Link href="/dashboard/verify-phone" className="rounded-full border border-line px-4 py-2 text-sm text-mist hover:text-paper">
+              Nömrəni dəyiş
+            </Link>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-gold/40 bg-gold/5 p-6 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-gold mb-1">
+                {phoneProfile?.phone ? "Təsdiq gözlənilir" : "Doğrulanmayıb"}
+              </p>
+              <p className="text-sm text-mist">
+                {phoneProfile?.phone
+                  ? "Nömrəniz admin təsdiqini gözləyir."
+                  : "Elan yerləşdirmək üçün telefon nömrənizi doğrulayın."}
+              </p>
+            </div>
+            <Link href="/dashboard/verify-phone" className="rounded-full bg-gold text-bg px-4 py-2 text-sm font-semibold">
+              Nömrə doğrula
+            </Link>
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           <h2 className="font-display text-xl">Mənim elanlarım</h2>
