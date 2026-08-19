@@ -175,3 +175,8 @@ create index if not exists idx_ledger_user on public.ledger(user_id);
 -- Listings: şəkil dəstəyi
 alter table public.listings add column if not exists image_url text;
 
+
+-- Telefon doğrulaması
+alter table public.profiles add column if not exists phone text;
+alter table public.profiles add column if not exists phone_verified boolean not null default false;
+

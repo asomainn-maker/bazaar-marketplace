@@ -53,6 +53,10 @@ export default function NewListingPage() {
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data.code === "phone_not_verified") {
+          router.push("/dashboard/verify-phone");
+          return;
+        }
         setError(data.error || "Elan yaradılmadı");
         return;
       }

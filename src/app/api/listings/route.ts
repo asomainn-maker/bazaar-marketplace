@@ -17,6 +17,18 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = createAdminClient();
+
+  const { data: sellerProfile } = await admin
+    .from("profiles")
+    .select("phone_verified")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (!sellerProfile?.phone_verified) {
+    return NextResponse.json(
+      { error: "Elan yerləşdirmək üçün əvvəlcə telefon nömrənizi doğrulayın", code: "phone_not_verified" },
+      { status: 403 }
+    );
+  }
   const { data: listing, error } = await admin
     .from("listings")
     .insert({
