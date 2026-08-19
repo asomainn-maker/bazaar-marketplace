@@ -4,6 +4,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const revalidate = 0;
 
+function levelInfo(sales: number) {
+  if (sales >= 100) return { label: "Platinum satıcı", color: "text-violet-soft" };
+  if (sales >= 50) return { label: "Qızıl satıcı", color: "text-gold" };
+  if (sales >= 20) return { label: "Gümüş satıcı", color: "text-mist" };
+  if (sales >= 5) return { label: "Bürünc satıcı", color: "text-amber-400" };
+  return { label: "Yeni satıcı", color: "text-mist" };
+}
+
 export default async function ProfilePage({
   params,
 }: {
@@ -25,6 +33,8 @@ export default async function ProfilePage({
     .eq("seller_id", profile.id)
     .order("created_at", { ascending: false });
 
+  const activeCount = (listings ?? []).filter((l) => l.status === "active").length;
+
   const { count: completedSales } = await admin
     .from("orders")
     .select("*", { count: "exact", head: true })
@@ -43,6 +53,9 @@ export default async function ProfilePage({
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : null;
 
+  const level = levelInfo(completedSales ?? 0);
+  const memberSince = new Date(profile.created_at).toLocaleDateString("az", { year: "numeric", month: "long" });
+
   return (
     <div className="min-h-screen">
       <header className="max-w-4xl mx-auto px-6 pt-8 flex items-center justify-between">
@@ -51,25 +64,43 @@ export default async function ProfilePage({
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-12">
-        <div className="rounded-2xl border border-line bg-panel p-8 mb-8">
-          <div className="flex items-start justify-between flex-wrap gap-4">
-            <div>
-              <h1 className="font-display text-3xl mb-1">@{profile.username}</h1>
-              {profile.is_verified_seller && (
-                <span className="inline-block rounded-full bg-jade/10 text-jade text-xs px-3 py-1">✓ Doğrulanmış satıcı</span>
-              )}
+        {/* Banner */}
+        <div className="h-28 rounded-t-2xl bg-gradient-to-r from-jade/20 via-violet-soft/10 to-gold/20 border border-b-0 border-line" />
+
+        <div className="rounded-b-2xl border border-line bg-panel p-8 mb-8">
+          <div className="flex items-start gap-5 flex-wrap -mt-16">
+            <div className="w-24 h-24 rounded-2xl bg-bg border-4 border-panel flex items-center justify-center font-display text-3xl shrink-0">
+              {profile.username.slice(0, 1).toUpperCase()}
             </div>
-            <div className="flex gap-8 text-center">
-              <div>
-                <p className="font-display text-2xl">{completedSales ?? 0}</p>
-                <p className="text-xs text-mist">Uğurlu satış</p>
+
+            <div className="flex-1 min-w-0 pt-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="font-display text-2xl">@{profile.username}</h1>
+                {profile.is_verified_seller && (
+                  <span className="rounded-full bg-jade/10 text-jade text-[10px] px-2 py-1">✓ Doğrulanmış</span>
+                )}
               </div>
-              <div>
-                <p className="font-display text-2xl text-gold">
-                  {avgRating !== null ? avgRating.toFixed(1) : "—"}
-                </p>
-                <p className="text-xs text-mist">{reviews?.length ?? 0} rəy</p>
-              </div>
+              <p className={`text-sm font-medium ${level.color}`}>{level.label}</p>
+              <p className="text-xs text-mist mt-1">Üzvlük: {memberSince}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-line text-center">
+            <div>
+              <p className="font-display text-xl">{completedSales ?? 0}</p>
+              <p className="text-[11px] text-mist">Uğurlu satış</p>
+            </div>
+            <div>
+              <p className="font-display text-xl text-gold">{avgRating !== null ? avgRating.toFixed(1) : "—"}</p>
+              <p className="text-[11px] text-mist">{reviews?.length ?? 0} rəy</p>
+            </div>
+            <div>
+              <p className="font-display text-xl">{activeCount}</p>
+              <p className="text-[11px] text-mist">Aktiv elan</p>
+            </div>
+            <div className="hidden sm:block">
+              <p className="font-display text-xl">{listings?.length ?? 0}</p>
+              <p className="text-[11px] text-mist">Cəmi elan</p>
             </div>
           </div>
         </div>
