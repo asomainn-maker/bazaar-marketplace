@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyUser } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
 
   const { data: listing } = await admin
     .from("listings")
-    .select("id, seller_id, price, status")
+    .select("id, seller_id, price, status, title")
     .eq("id", listing_id)
     .maybeSingle();
 
@@ -79,6 +80,9 @@ export async function POST(req: NextRequest) {
     amount: -Number(listing.price),
     note: "Elan üçün ödəniş, escrow-da saxlanılır",
   });
+
+  await notifyUser(admin, user.id, "Sifariş qəbul edildi", `<b>${listing.title}</b> üçün $${Number(listing.price).toFixed(2)} ödədiniz. Pul satıcı təhvil verib siz təsdiqləyənə qədər qorunmada saxlanılır.`);
+  await notifyUser(admin, listing.seller_id, "Yeni sifariş", `<b>${listing.title}</b> elanınız $${Number(listing.price).toFixed(2)}-a satıldı. Zəhmət olmasa məhsulu təhvil verib "Təslim etdim" düyməsinə basın.`);
 
   return NextResponse.json({ order });
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyUser } from "@/lib/email";
 
 export async function POST(
   _req: NextRequest,
@@ -15,7 +16,7 @@ export async function POST(
 
   const { data: order } = await admin
     .from("orders")
-    .select("id, buyer_id, seller_id, amount, status, listing_id")
+    .select("id, buyer_id, seller_id, amount, status, listing_id, listings(title)")
     .eq("id", id)
     .maybeSingle();
 
@@ -39,6 +40,9 @@ export async function POST(
   if (order.listing_id) {
     await admin.from("listings").update({ status: "active" }).eq("id", order.listing_id);
   }
+
+  const title = (order.listings as unknown as { title: string } | null)?.title ?? "Sifariş";
+  await notifyUser(admin, order.buyer_id, "Sifariş ləğv edildi", `Satıcı <b>${title}</b> sifarişini ləğv etdi. $${Number(order.amount).toFixed(2)} balansınıza geri qaytarıldı.`);
 
   return NextResponse.json({ ok: true });
 }

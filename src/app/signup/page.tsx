@@ -72,6 +72,9 @@ export default function SignupPage() {
             <button type="submit" disabled={loading} className="w-full rounded-full bg-jade text-bg font-semibold px-4 py-3 text-sm hover:bg-jade-soft transition disabled:opacity-50">
               {loading ? "Göndərilir…" : "Qeydiyyatdan keç"}
             </button>
+            <p className="text-[11px] text-mist text-center">
+              Qeydiyyatdan keçməklə <Link href="/terms" className="underline">İstifadə şərtlərini</Link> və <Link href="/privacy" className="underline">Məxfilik siyasətini</Link> qəbul edirsiniz.
+            </p>
             <p className="text-sm text-mist text-center pt-1">Artıq hesabınız var? <Link href="/login" className="text-jade-soft underline underline-offset-4">Giriş</Link></p>
           </form>
         )}

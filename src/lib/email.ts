@@ -1,7 +1,8 @@
-export async function notifyAdmin(subject: string, message: string) {
+import { createAdminClient } from "@/lib/supabase/admin";
+
+async function sendEmail(to: string, subject: string, html: string) {
   const apiKey = process.env.RESEND_API_KEY;
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (!apiKey || !adminEmail) return; // sakitcə keç, konfiqurasiya olunmayıbsa
+  if (!apiKey) return; // konfiqurasiya olunmayıbsa sakitcə keç
 
   try {
     await fetch("https://api.resend.com/emails", {
@@ -12,12 +13,45 @@ export async function notifyAdmin(subject: string, message: string) {
       },
       body: JSON.stringify({
         from: "Bazar <onboarding@resend.dev>",
-        to: [adminEmail],
-        subject: `Bazar: ${subject}`,
-        html: `<p>${message}</p><p><a href="https://bazaar-flax.vercel.app/admin">Admin panelinə keç</a></p>`,
+        to: [to],
+        subject,
+        html,
       }),
     });
   } catch {
     // email göndərilməsə də əsas əməliyyat davam etsin
   }
+}
+
+export async function notifyAdmin(subject: string, message: string) {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) return;
+  await sendEmail(
+    adminEmail,
+    `Bazar: ${subject}`,
+    `<p>${message}</p><p><a href="https://bazaar-flax.vercel.app/admin">Admin panelinə keç</a></p>`
+  );
+}
+
+export async function getUserEmail(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string
+): Promise<string | null> {
+  const { data } = await admin.auth.admin.getUserById(userId);
+  return data.user?.email ?? null;
+}
+
+export async function notifyUser(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  subject: string,
+  message: string
+) {
+  const email = await getUserEmail(admin, userId);
+  if (!email) return;
+  await sendEmail(
+    email,
+    `Bazar: ${subject}`,
+    `<p>${message}</p><p><a href="https://bazaar-flax.vercel.app/dashboard">Dashboard-a keç</a></p>`
+  );
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyUser } from "@/lib/email";
 
 export async function POST(
   _req: NextRequest,
@@ -15,7 +16,7 @@ export async function POST(
 
   const { data: order } = await admin
     .from("orders")
-    .select("id, buyer_id, seller_id, amount, status")
+    .select("id, buyer_id, seller_id, amount, status, listings(title)")
     .eq("id", id)
     .maybeSingle();
 
@@ -49,5 +50,9 @@ export async function POST(
     .eq("id", id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  const title = (order.listings as unknown as { title: string } | null)?.title ?? "Sifariş";
+  await notifyUser(admin, order.seller_id, "Ödəniş balansınıza keçdi", `<b>${title}</b> üçün $${Number(order.amount).toFixed(2)} balansınıza əlavə olundu.`);
+
   return NextResponse.json({ ok: true });
 }

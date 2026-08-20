@@ -3,36 +3,56 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import HomeLogoutButton from "./home-logout-button";
 import NotificationBell from "./notification-bell";
+import { Suspense } from "react";
 import SearchBar from "./search-bar";
+import FilterBar from "./filter-bar";
 
 export const revalidate = 0;
 
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; sort?: string; min?: string; max?: string; page?: string }>;
 }) {
-  const { q, category } = await searchParams;
+  const { q, category, sort, min, max, page } = await searchParams;
   const admin = createAdminClient();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const { data: categories } = await admin.from("categories").select("id, slug, name").order("sort_order");
 
+  const PAGE_SIZE = 24;
+  const currentPage = Math.max(1, parseInt(page ?? "1", 10) || 1);
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   let query = admin
     .from("listings")
-    .select("id, title, price, image_url, created_at, seller_id, categories(name, slug)")
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(60);
+    .select("id, title, price, image_url, created_at, seller_id, categories(name, slug)", { count: "exact" })
+    .eq("status", "active");
 
   if (q) query = query.ilike("title", `%${q}%`);
   if (category) {
     const cat = (categories ?? []).find((c) => c.slug === category);
     if (cat) query = query.eq("category_id", cat.id);
   }
+  if (min) query = query.gte("price", Number(min));
+  if (max) query = query.lte("price", Number(max));
 
-  const { data: listings } = await query;
+  if (sort === "price_asc") query = query.order("price", { ascending: true });
+  else if (sort === "price_desc") query = query.order("price", { ascending: false });
+  else if (sort === "oldest") query = query.order("created_at", { ascending: true });
+  else query = query.order("created_at", { ascending: false });
+
+  const { data: listings, count } = await query.range(from, to);
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
+
+  const baseParams = new URLSearchParams();
+  if (q) baseParams.set("q", q);
+  if (category) baseParams.set("category", category);
+  if (sort) baseParams.set("sort", sort);
+  if (min) baseParams.set("min", min);
+  if (max) baseParams.set("max", max);
 
   const sellerIds = [...new Set((listings ?? []).map((l) => l.seller_id))];
   let sellerNames: Record<string, string> = {};
@@ -96,7 +116,11 @@ export default async function Home({
           </div>
         )}
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <Suspense fallback={<div className="h-10" />}>
+          <FilterBar sort={sort ?? ""} min={min ?? ""} max={max ?? ""} />
+        </Suspense>
+
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mt-6">
           {(listings ?? []).length === 0 && (
             <p className="text-mist col-span-full text-center py-16 border border-dashed border-line rounded-2xl">
               Heç bir nəticə tapılmadı.
@@ -129,6 +153,28 @@ export default async function Home({
           ))}
         </div>
       </main>
+
+      {totalPages > 1 && (
+        <div className="max-w-6xl mx-auto px-6 pb-10 flex items-center justify-center gap-3 text-sm">
+          {currentPage > 1 && (
+            <a href={`/?${(() => { const p = new URLSearchParams(baseParams); p.set("page", String(currentPage - 1)); return p.toString(); })()}`} className="rounded-full border border-line px-4 py-2 hover:border-jade">← Əvvəlki</a>
+          )}
+          <span className="text-mist">{currentPage} / {totalPages}</span>
+          {currentPage < totalPages && (
+            <a href={`/?${(() => { const p = new URLSearchParams(baseParams); p.set("page", String(currentPage + 1)); return p.toString(); })()}`} className="rounded-full border border-line px-4 py-2 hover:border-jade">Növbəti →</a>
+          )}
+        </div>
+      )}
+
+      <footer className="border-t border-line mt-10">
+        <div className="max-w-6xl mx-auto px-6 py-6 flex flex-wrap items-center justify-between gap-3 text-xs text-mist">
+          <span>© 2026 Bazar</span>
+          <div className="flex gap-4">
+            <Link href="/terms" className="hover:text-paper">İstifadə şərtləri</Link>
+            <Link href="/privacy" className="hover:text-paper">Məxfilik siyasəti</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

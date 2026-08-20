@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyUser } from "@/lib/email";
 
 const AUTO_RELEASE_DAYS = 3;
 
@@ -17,7 +18,7 @@ export async function POST(
 
   const { data: order } = await admin
     .from("orders")
-    .select("id, seller_id, status")
+    .select("id, seller_id, buyer_id, status, listings(title)")
     .eq("id", id)
     .maybeSingle();
 
@@ -37,5 +38,9 @@ export async function POST(
     .eq("id", id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  const title = (order.listings as unknown as { title: string } | null)?.title ?? "Sifariş";
+  await notifyUser(admin, order.buyer_id, "Məhsul təslim edildi", `Satıcı <b>${title}</b> üçün məhsulu təslim etdiyini bildirdi. Zəhmət olmasa yoxlayıb təsdiqləyin.`);
+
   return NextResponse.json({ ok: true, auto_release_at: autoRelease.toISOString() });
 }
