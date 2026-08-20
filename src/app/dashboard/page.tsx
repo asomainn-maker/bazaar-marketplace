@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureProfile } from "@/lib/profile-utils";
 import LogoutButton from "./logout-button";
 import NotificationBell from "../notification-bell";
+import DeleteListingButton from "./delete-listing-button";
 
 export const revalidate = 0;
 
@@ -27,7 +28,7 @@ export default async function DashboardPage() {
 
   const { data: phoneProfile } = await admin
     .from("profiles")
-    .select("phone, phone_verified")
+    .select("phone, phone_verified, phone_verification_code")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -35,6 +36,7 @@ export default async function DashboardPage() {
     .from("listings")
     .select("id, title, price, status, created_at")
     .eq("seller_id", user.id)
+    .neq("status", "removed")
     .order("created_at", { ascending: false });
 
   const { data: purchases } = await admin
@@ -92,7 +94,9 @@ export default async function DashboardPage() {
                 {phoneProfile?.phone ? "Təsdiq gözlənilir" : "Doğrulanmayıb"}
               </p>
               <p className="text-sm text-mist">
-                {phoneProfile?.phone
+                {phoneProfile?.phone_verification_code
+                  ? "Təsdiq kodu hazırdır — daxil edin"
+                  : phoneProfile?.phone
                   ? "Nömrəniz admin təsdiqini gözləyir."
                   : "Elan yerləşdirmək üçün telefon nömrənizi doğrulayın."}
               </p>
@@ -115,9 +119,12 @@ export default async function DashboardPage() {
             <div key={l.id} className="rounded-xl border border-line bg-panel p-4 flex items-center justify-between">
               <div>
                 <p className="font-medium">{l.title}</p>
-                <p className="text-xs text-mist">{l.status === "active" ? "Aktiv" : l.status === "sold" ? "Satılıb" : "Silinib"}</p>
+                <p className="text-xs text-mist">{l.status === "active" ? "Aktiv" : "Satılıb"}</p>
               </div>
-              <span className="font-mono text-jade-soft">${Number(l.price).toFixed(2)}</span>
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-jade-soft">${Number(l.price).toFixed(2)}</span>
+                {l.status === "active" && <DeleteListingButton listingId={l.id} />}
+              </div>
             </div>
           ))}
         </div>

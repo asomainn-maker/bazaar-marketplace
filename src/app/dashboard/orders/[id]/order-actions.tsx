@@ -131,6 +131,19 @@ export default function OrderActions({
             Təslim etdim
           </button>
         )}
+        {!isBuyer && status === "paid" && (
+          <button
+            onClick={() => {
+              if (confirm("Sifarişi ləğv edirsiniz? Pul dərhal alıcıya geri qaytarılacaq.")) {
+                callAction(`/api/orders/${orderId}/cancel`);
+              }
+            }}
+            disabled={loading}
+            className="rounded-full border border-gold/40 text-gold px-5 py-2.5 text-sm disabled:opacity-50"
+          >
+            İmtina et
+          </button>
+        )}
         {isBuyer && status === "delivered" && (
           <button
             onClick={() => callAction(`/api/orders/${orderId}/confirm`)}

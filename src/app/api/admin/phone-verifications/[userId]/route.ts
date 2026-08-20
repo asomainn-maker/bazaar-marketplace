@@ -15,15 +15,17 @@ export async function POST(
   if (!profile?.is_admin) return NextResponse.json({ error: "İcazə yoxdur" }, { status: 403 });
 
   const { userId } = await params;
-  const { action } = await req.json(); // 'approve' | 'reject'
-  if (!["approve", "reject"].includes(action)) {
-    return NextResponse.json({ error: "action 'approve' və ya 'reject' olmalıdır" }, { status: 400 });
-  }
+  const { action, code } = await req.json(); // 'set-code' | 'reject'
 
-  if (action === "approve") {
-    await admin.from("profiles").update({ phone_verified: true }).eq("id", userId);
+  if (action === "set-code") {
+    if (typeof code !== "string" || !code.trim()) {
+      return NextResponse.json({ error: "Kod tələb olunur" }, { status: 400 });
+    }
+    await admin.from("profiles").update({ phone_verification_code: code.trim() }).eq("id", userId);
+  } else if (action === "reject") {
+    await admin.from("profiles").update({ phone: null, phone_verified: false, phone_verification_code: null }).eq("id", userId);
   } else {
-    await admin.from("profiles").update({ phone: null, phone_verified: false }).eq("id", userId);
+    return NextResponse.json({ error: "action 'set-code' və ya 'reject' olmalıdır" }, { status: 400 });
   }
 
   return NextResponse.json({ ok: true });

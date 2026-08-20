@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyAdmin } from "@/lib/email";
 
 export async function POST(
   req: NextRequest,
@@ -44,6 +45,8 @@ export async function POST(
       body: message.trim().slice(0, 2000),
     });
   }
+
+  await notifyAdmin("Yeni mübahisə açıldı", `Sifariş #${order.id.slice(0, 8)} üçün mübahisə açıldı. Admin panelindən baxın.`);
 
   return NextResponse.json({ ticket_id: ticket.id });
 }

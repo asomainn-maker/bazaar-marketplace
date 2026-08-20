@@ -254,3 +254,7 @@ create policy "Participants can send messages" on public.direct_messages
 create index if not exists idx_dm_conversation on public.direct_messages(conversation_id);
 create index if not exists idx_conversations_buyer on public.conversations(buyer_id);
 create index if not exists idx_conversations_seller on public.conversations(seller_id);
+
+-- Admin genişlənməsi: ban, telefon kodu
+alter table public.profiles add column if not exists is_banned boolean not null default false;
+alter table public.profiles add column if not exists phone_verification_code text;
