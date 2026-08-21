@@ -37,6 +37,8 @@ export default function FilterBar({ sort, min, max }: { sort: string; min: strin
         <option value="oldest">Ən köhnə</option>
         <option value="price_asc">Qiymət: aşağıdan yuxarı</option>
         <option value="price_desc">Qiymət: yuxarıdan aşağı</option>
+        <option value="top_sales">Ən çox satan</option>
+        <option value="top_rated">Ən çox xallı</option>
       </select>
 
       <form onSubmit={applyPriceRange} className="flex items-center gap-2">

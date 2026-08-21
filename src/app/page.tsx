@@ -40,13 +40,61 @@ export default async function Home({
   if (min) query = query.gte("price", Number(min));
   if (max) query = query.lte("price", Number(max));
 
-  if (sort === "price_asc") query = query.order("price", { ascending: true });
-  else if (sort === "price_desc") query = query.order("price", { ascending: false });
-  else if (sort === "oldest") query = query.order("created_at", { ascending: true });
-  else query = query.order("created_at", { ascending: false });
+  type ListingRow = {
+    id: string; title: string; price: number; image_url: string | null;
+    created_at: string; seller_id: string; categories: unknown;
+  };
 
-  const { data: listings, count } = await query.range(from, to);
-  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
+  let listings: ListingRow[] = [];
+  let count = 0;
+
+  if (sort === "top_sales" || sort === "top_rated") {
+    // Bu sıralamalar satıcı statistikasına əsaslanır, DB-level order dəstəklənmir — JS-də sıralayırıq.
+    const { data: allMatching } = await query.limit(300);
+    const rows = (allMatching ?? []) as ListingRow[];
+    const sellerIds = [...new Set(rows.map((l) => l.seller_id))];
+
+    let salesBySeller: Record<string, number> = {};
+    let ratingBySeller: Record<string, number> = {};
+    if (sellerIds.length > 0) {
+      const { data: orderRows } = await admin
+        .from("orders").select("seller_id").eq("status", "completed").in("seller_id", sellerIds);
+      salesBySeller = (orderRows ?? []).reduce<Record<string, number>>((acc, o) => {
+        acc[o.seller_id] = (acc[o.seller_id] ?? 0) + 1;
+        return acc;
+      }, {});
+
+      const { data: reviewRows } = await admin
+        .from("reviews").select("reviewee_id, rating").in("reviewee_id", sellerIds);
+      const grouped: Record<string, number[]> = {};
+      (reviewRows ?? []).forEach((r) => {
+        grouped[r.reviewee_id] = grouped[r.reviewee_id] ?? [];
+        grouped[r.reviewee_id].push(r.rating);
+      });
+      ratingBySeller = Object.fromEntries(
+        Object.entries(grouped).map(([id, ratings]) => [id, ratings.reduce((a, b) => a + b, 0) / ratings.length])
+      );
+    }
+
+    rows.sort((a, b) => {
+      if (sort === "top_sales") return (salesBySeller[b.seller_id] ?? 0) - (salesBySeller[a.seller_id] ?? 0);
+      return (ratingBySeller[b.seller_id] ?? 0) - (ratingBySeller[a.seller_id] ?? 0);
+    });
+
+    count = rows.length;
+    listings = rows.slice(from, to + 1);
+  } else {
+    if (sort === "price_asc") query = query.order("price", { ascending: true });
+    else if (sort === "price_desc") query = query.order("price", { ascending: false });
+    else if (sort === "oldest") query = query.order("created_at", { ascending: true });
+    else query = query.order("created_at", { ascending: false });
+
+    const result = await query.range(from, to);
+    listings = (result.data ?? []) as ListingRow[];
+    count = result.count ?? 0;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(count / PAGE_SIZE));
 
   const baseParams = new URLSearchParams();
   if (q) baseParams.set("q", q);

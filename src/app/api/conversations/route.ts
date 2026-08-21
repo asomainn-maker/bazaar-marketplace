@@ -64,6 +64,11 @@ export async function POST(req: NextRequest) {
   if (sellerId === user.id) return NextResponse.json({ error: "Özünüzə mesaj yaza bilməzsiniz" }, { status: 400 });
 
   const admin = createAdminClient();
+
+  const { data: senderProfile } = await admin.from("profiles").select("can_message").eq("id", user.id).maybeSingle();
+  if (senderProfile?.can_message === false) {
+    return NextResponse.json({ error: "Admin sizin mesaj yazma icazənizi bloklayıb" }, { status: 403 });
+  }
   const { data: existing } = await admin
     .from("conversations")
     .select("id")

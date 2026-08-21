@@ -11,8 +11,12 @@ type UserRow = {
   is_admin: boolean;
   phone: string | null;
   phone_verified: boolean;
+  can_list: boolean;
+  can_message: boolean;
   created_at: string;
 };
+
+type ListingRow = { id: string; title: string; price: number; status: string };
 
 export default function AdminUsersPage() {
   const [query, setQuery] = useState("");
@@ -22,9 +26,11 @@ export default function AdminUsersPage() {
   const [transferAmount, setTransferAmount] = useState("");
   const [transferTo, setTransferTo] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [openListings, setOpenListings] = useState<string | null>(null);
+  const [listings, setListings] = useState<ListingRow[]>([]);
 
-  async function search(e: React.FormEvent) {
-    e.preventDefault();
+  async function search(e?: React.FormEvent) {
+    e?.preventDefault();
     if (!query.trim()) return;
     setLoading(true);
     const res = await fetch(`/api/admin/users/search?q=${encodeURIComponent(query.trim())}`);
@@ -33,48 +39,76 @@ export default function AdminUsersPage() {
     setLoading(false);
   }
 
+  function patchUser(id: string, patch: Partial<UserRow>) {
+    setUsers((prev) => prev.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+  }
+
   async function toggleBan(u: UserRow) {
     await fetch(`/api/admin/users/${u.id}/ban`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ banned: !u.is_banned }),
     });
-    setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, is_banned: !x.is_banned } : x)));
+    patchUser(u.id, { is_banned: !u.is_banned });
+  }
+
+  async function toggleListingBlock(u: UserRow) {
+    await fetch(`/api/admin/users/${u.id}/toggle-listing-block`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ blocked: u.can_list }),
+    });
+    patchUser(u.id, { can_list: !u.can_list });
+  }
+
+  async function toggleMessageBlock(u: UserRow) {
+    await fetch(`/api/admin/users/${u.id}/toggle-message-block`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ blocked: u.can_message }),
+    });
+    patchUser(u.id, { can_message: !u.can_message });
+  }
+
+  async function resetPhone(u: UserRow) {
+    if (!confirm(`@${u.username}-in telefonu sıfırlansın?`)) return;
+    await fetch(`/api/admin/users/${u.id}/reset-phone`, { method: "POST" });
+    patchUser(u.id, { phone: null, phone_verified: false });
+  }
+
+  async function forceVerifyPhone(u: UserRow) {
+    await fetch(`/api/admin/users/${u.id}/verify-phone`, { method: "POST" });
+    patchUser(u.id, { phone_verified: true });
   }
 
   async function deleteUser(u: UserRow) {
     if (!confirm(`@${u.username} tamamilə silinsin? Bu geri qaytarıla bilməz.`)) return;
     const res = await fetch(`/api/admin/users/${u.id}/delete`, { method: "POST" });
     const data = await res.json();
-    if (!res.ok) {
-      setMessage(data.error);
-      return;
-    }
+    if (!res.ok) { setMessage(data.error); return; }
     setUsers((prev) => prev.filter((x) => x.id !== u.id));
   }
 
-  async function removeListings(u: UserRow) {
-    if (!confirm(`@${u.username}-in bütün aktiv elanları qaldırılsın?`)) return;
-    await fetch(`/api/admin/users/${u.id}/remove-listings`, { method: "POST" });
-    setMessage(`@${u.username}-in elanları qaldırıldı.`);
+  async function toggleListingsView(u: UserRow) {
+    if (openListings === u.id) { setOpenListings(null); return; }
+    const res = await fetch(`/api/admin/users/${u.id}/listings`);
+    const data = await res.json();
+    setListings(data.listings ?? []);
+    setOpenListings(u.id);
+  }
+
+  async function removeOneListing(listingId: string) {
+    await fetch(`/api/listings/${listingId}`, { method: "DELETE" });
+    setListings((prev) => prev.filter((l) => l.id !== listingId));
   }
 
   async function submitTransfer(u: UserRow) {
     const res = await fetch(`/api/admin/users/${u.id}/transfer-balance`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ amount: Number(transferAmount), toUsername: transferTo }),
     });
     const data = await res.json();
-    if (!res.ok) {
-      setMessage(data.error);
-      return;
-    }
+    if (!res.ok) { setMessage(data.error); return; }
     setMessage(`$${transferAmount} @${u.username}-dan @${transferTo}-a köçürüldü.`);
-    setTransferTarget(null);
-    setTransferAmount("");
-    setTransferTo("");
-    search({ preventDefault() {} } as React.FormEvent);
+    setTransferTarget(null); setTransferAmount(""); setTransferTo("");
+    search();
   }
 
   return (
@@ -106,6 +140,8 @@ export default function AdminUsersPage() {
                   <p className="font-medium">
                     @{u.username} {u.is_admin && <span className="text-xs text-gold">(admin)</span>}
                     {u.is_banned && <span className="text-xs text-gold ml-2">🚫 Banlanıb</span>}
+                    {!u.can_list && <span className="text-xs text-mist ml-2">⛔ Elan bloklu</span>}
+                    {!u.can_message && <span className="text-xs text-mist ml-2">⛔ Mesaj bloklu</span>}
                   </p>
                   <p className="text-xs text-mist">
                     Balans: ${Number(u.wallet_balance).toFixed(2)} · Telefon: {u.phone ?? "yoxdur"} {u.phone_verified && "✓"}
@@ -116,9 +152,25 @@ export default function AdminUsersPage() {
                     <button onClick={() => toggleBan(u)} className="rounded-full border border-line text-xs px-3 py-1.5 hover:border-gold">
                       {u.is_banned ? "Ban aç" : "Ban et"}
                     </button>
-                    <button onClick={() => removeListings(u)} className="rounded-full border border-line text-xs px-3 py-1.5 hover:border-gold">
-                      Elanları qaldır
+                    <button onClick={() => toggleListingsView(u)} className="rounded-full border border-line text-xs px-3 py-1.5 hover:border-jade">
+                      Elanlarını göstər
                     </button>
+                    <button onClick={() => toggleListingBlock(u)} className="rounded-full border border-line text-xs px-3 py-1.5 hover:border-gold">
+                      {u.can_list ? "Elan bloklа" : "Elan aç"}
+                    </button>
+                    <button onClick={() => toggleMessageBlock(u)} className="rounded-full border border-line text-xs px-3 py-1.5 hover:border-gold">
+                      {u.can_message ? "Mesaj bloklа" : "Mesaj aç"}
+                    </button>
+                    {u.phone && !u.phone_verified && (
+                      <button onClick={() => forceVerifyPhone(u)} className="rounded-full border border-jade text-jade text-xs px-3 py-1.5">
+                        Telefonu təsdiqlə
+                      </button>
+                    )}
+                    {u.phone && (
+                      <button onClick={() => resetPhone(u)} className="rounded-full border border-line text-xs px-3 py-1.5 hover:border-gold">
+                        Telefonu sıfırla
+                      </button>
+                    )}
                     <button onClick={() => setTransferTarget(transferTarget === u.id ? null : u.id)} className="rounded-full border border-line text-xs px-3 py-1.5 hover:border-jade">
                       Balansı köçür
                     </button>
@@ -128,6 +180,23 @@ export default function AdminUsersPage() {
                   </div>
                 )}
               </div>
+
+              {openListings === u.id && (
+                <div className="mt-3 pt-3 border-t border-line space-y-2">
+                  {listings.length === 0 && <p className="text-xs text-mist">Aktiv elanı yoxdur.</p>}
+                  {listings.map((l) => (
+                    <div key={l.id} className="flex items-center justify-between text-sm">
+                      <span>{l.title} <span className="text-mist text-xs">({l.status === "active" ? "Aktiv" : "Satılıb"})</span></span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-jade-soft text-xs">${Number(l.price).toFixed(2)}</span>
+                        {l.status === "active" && (
+                          <button onClick={() => removeOneListing(l.id)} className="text-xs text-gold hover:underline">Qaldır</button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {transferTarget === u.id && (
                 <div className="mt-3 pt-3 border-t border-line flex gap-2 flex-wrap items-center">

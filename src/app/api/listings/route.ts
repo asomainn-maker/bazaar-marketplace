@@ -20,9 +20,12 @@ export async function POST(req: NextRequest) {
 
   const { data: sellerProfile } = await admin
     .from("profiles")
-    .select("phone, phone_verified")
+    .select("phone, phone_verified, can_list")
     .eq("id", user.id)
     .maybeSingle();
+  if (sellerProfile?.can_list === false) {
+    return NextResponse.json({ error: "Admin sizin elan yerləşdirmə icazənizi bloklayıb" }, { status: 403 });
+  }
   if (!sellerProfile?.phone_verified) {
     return NextResponse.json(
       {

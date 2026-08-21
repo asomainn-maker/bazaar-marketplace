@@ -43,6 +43,11 @@ export default async function AdminPage() {
     .select("*", { count: "exact", head: true })
     .in("status", ["paid", "delivered", "disputed"]);
 
+  const { count: openReportsCount } = await admin
+    .from("listing_reports")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "open");
+
   const withdrawUserIds = [...new Set((withdrawals ?? []).map((w) => w.user_id))];
   let names: Record<string, string> = {};
   if (withdrawUserIds.length > 0) {
@@ -57,6 +62,7 @@ export default async function AdminPage() {
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/admin/users" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">İstifadəçilər</Link>
           <Link href="/admin/orders" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">Sifarişlər ({activeOrdersCount ?? 0})</Link>
+          <Link href="/admin/reports" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">Report-lar ({openReportsCount ?? 0})</Link>
           <Link href="/dashboard" className="text-mist hover:text-paper">Dashboard</Link>
         </nav>
       </header>

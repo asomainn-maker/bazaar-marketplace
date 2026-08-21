@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import BuyButton from "./buy-button";
 import ListingTabs from "./listing-tabs";
 import MessageSellerButton from "./message-seller-button";
+import ReportListingButton from "./report-listing-button";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -115,6 +116,7 @@ export default async function ListingPage({
             <span className="font-mono text-2xl text-jade-soft">${Number(listing.price).toFixed(2)}</span>
             <div className="flex items-center gap-2">
               {!isOwnListing && user && <MessageSellerButton sellerId={listing.seller_id} listingId={listing.id} />}
+              {!isOwnListing && user && <ReportListingButton listingId={listing.id} />}
               {listing.status !== "active" ? (
                 <span className="text-sm text-mist">Bu elan artıq satılıb</span>
               ) : isOwnListing ? (

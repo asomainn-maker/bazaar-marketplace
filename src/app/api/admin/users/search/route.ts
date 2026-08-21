@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const admin = createAdminClient();
   const { data: users } = await admin
     .from("profiles")
-    .select("id, username, wallet_balance, is_banned, is_admin, phone, phone_verified, created_at")
+    .select("id, username, wallet_balance, is_banned, is_admin, phone, phone_verified, can_list, can_message, created_at")
     .ilike("username", `%${q}%`)
     .limit(20);
 

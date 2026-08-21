@@ -63,6 +63,11 @@ export async function POST(
   const convo = await assertParticipant(admin, id, user.id);
   if (!convo) return NextResponse.json({ error: "Tapılmadı" }, { status: 404 });
 
+  const { data: senderProfile } = await admin.from("profiles").select("can_message").eq("id", user.id).maybeSingle();
+  if (senderProfile?.can_message === false) {
+    return NextResponse.json({ error: "Admin sizin mesaj yazma icazənizi bloklayıb" }, { status: 403 });
+  }
+
   const { data: message, error } = await admin
     .from("direct_messages")
     .insert({ conversation_id: id, sender_id: user.id, body: body.trim().slice(0, 2000) })
