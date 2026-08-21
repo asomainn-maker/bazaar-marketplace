@@ -33,9 +33,14 @@ export async function middleware(request: NextRequest) {
   if (!user && (path.startsWith("/dashboard") || path.startsWith("/admin"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    redirectResponse.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    return redirectResponse;
   }
 
+  // KRİTİK: heç bir istifadəçi-spesifik səhifə keşlənməsin (bütün proksi/CDN
+  // qatlarında) — əks halda bir istifadəçinin HTML-i başqasına göstərilə bilər.
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
   return response;
 }
 

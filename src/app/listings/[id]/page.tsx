@@ -6,6 +6,7 @@ import BuyButton from "./buy-button";
 import ListingTabs from "./listing-tabs";
 import MessageSellerButton from "./message-seller-button";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function ListingPage({

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import OrderActions from "./order-actions";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function OrderPage({

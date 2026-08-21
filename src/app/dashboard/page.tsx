@@ -7,6 +7,7 @@ import LogoutButton from "./logout-button";
 import NotificationBell from "../notification-bell";
 import DeleteListingButton from "./delete-listing-button";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const STATUS_LABELS: Record<string, string> = {

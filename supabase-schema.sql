@@ -258,3 +258,19 @@ create index if not exists idx_conversations_seller on public.conversations(sell
 -- Admin genişlənməsi: ban, telefon kodu
 alter table public.profiles add column if not exists is_banned boolean not null default false;
 alter table public.profiles add column if not exists phone_verification_code text;
+
+-- İstifadəçi bloklama imkanları
+alter table public.profiles add column if not exists can_list boolean not null default true;
+alter table public.profiles add column if not exists can_message boolean not null default true;
+
+-- Elan report sistemi
+create table if not exists public.listing_reports (
+  id uuid primary key default gen_random_uuid(),
+  listing_id uuid not null references public.listings(id) on delete cascade,
+  reporter_id uuid not null references auth.users(id),
+  reason text not null check (char_length(reason) between 1 and 500),
+  status text not null default 'open' check (status in ('open','resolved')),
+  created_at timestamptz not null default now()
+);
+alter table public.listing_reports enable row level security;
+create policy "Users can report" on public.listing_reports for insert with check (auth.uid() = reporter_id);

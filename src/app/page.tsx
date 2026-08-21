@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import SearchBar from "./search-bar";
 import FilterBar from "./filter-bar";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function Home({
