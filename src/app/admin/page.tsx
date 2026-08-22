@@ -19,7 +19,7 @@ export default async function AdminPage() {
 
   const { data: tickets } = await admin
     .from("tickets")
-    .select("id, status, created_at, order_id, orders(amount, listings(title))")
+    .select("id, status, created_at, order_id, category, orders(amount, listings(title))")
     .order("created_at", { ascending: false });
 
   const { data: withdrawals } = await admin
@@ -94,22 +94,41 @@ export default async function AdminPage() {
         </div>
 
         <div>
-          <h1 className="font-display text-2xl mb-5">Açıq mübahisələr</h1>
+          <h1 className="font-display text-2xl mb-5">Açıq müraciətlər (mübahisə + report + digər)</h1>
           <div className="space-y-3">
             {(!tickets || tickets.filter((t) => t.status === "open").length === 0) && (
               <p className="text-sm text-mist">Açıq ticket yoxdur.</p>
             )}
-            {(tickets ?? []).filter((t) => t.status === "open").map((t) => (
-              <Link key={t.id} href={`/admin/tickets/${t.id}`} className="block rounded-xl border border-line bg-panel p-4 hover:border-gold transition-colors">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium">{(t.orders as unknown as { listings: { title: string } } | null)?.listings?.title ?? "Sifariş"}</p>
-                  <span className="font-mono text-gold">
-                    ${Number((t.orders as unknown as { amount: number } | null)?.amount ?? 0).toFixed(2)}
-                  </span>
-                </div>
-                <p className="text-xs text-mist mt-1">{new Date(t.created_at).toLocaleString("az")}</p>
-              </Link>
-            ))}
+            {(tickets ?? []).filter((t) => t.status === "open").map((t) => {
+              const CATEGORY_LABELS: Record<string, string> = {
+                report_listing: "Elan report",
+                report_user: "İstifadəçi report",
+                feedback: "Fikir/tövsiyə",
+                problem_encountered: "Problem",
+                other: "Digər",
+              };
+              const isOrderTicket = !!t.order_id;
+              const title = isOrderTicket
+                ? (t.orders as unknown as { listings: { title: string } } | null)?.listings?.title ?? "Sifariş"
+                : CATEGORY_LABELS[t.category ?? ""] ?? "Müraciət";
+              return (
+                <Link key={t.id} href={`/admin/tickets/${t.id}`} className="block rounded-xl border border-line bg-panel p-4 hover:border-gold transition-colors">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium">{title}</p>
+                    {isOrderTicket ? (
+                      <span className="font-mono text-gold">
+                        ${Number((t.orders as unknown as { amount: number } | null)?.amount ?? 0).toFixed(2)}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] uppercase tracking-widest text-mist">
+                        {isOrderTicket ? "" : "Ümumi"}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-mist mt-1">{new Date(t.created_at).toLocaleString("az")}</p>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
