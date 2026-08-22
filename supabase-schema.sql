@@ -274,3 +274,8 @@ create table if not exists public.listing_reports (
 );
 alter table public.listing_reports enable row level security;
 create policy "Users can report" on public.listing_reports for insert with check (auth.uid() = reporter_id);
+
+-- Dəstək ticketlərinə kateqoriya və istinad
+alter table public.tickets add column if not exists category text;
+alter table public.tickets add column if not exists listing_id uuid references public.listings(id);
+alter table public.tickets add column if not exists target_user_id uuid references auth.users(id);
