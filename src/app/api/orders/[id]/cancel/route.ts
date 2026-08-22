@@ -42,7 +42,7 @@ export async function POST(
   }
 
   const title = (order.listings as unknown as { title: string } | null)?.title ?? "Sifariş";
-  await notifyUser(admin, order.buyer_id, "Sifariş ləğv edildi", `Satıcı <b>${title}</b> sifarişini ləğv etdi. $${Number(order.amount).toFixed(2)} balansınıza geri qaytarıldı.`);
+  await notifyUser(admin, order.buyer_id, "Sifariş ləğv edildi", `Satıcı <b>${title}</b> sifarişini ləğv etdi. ${Number(order.amount).toFixed(2)} ₼ balansınıza geri qaytarıldı.`);
 
   return NextResponse.json({ ok: true });
 }

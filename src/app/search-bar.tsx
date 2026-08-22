@@ -67,7 +67,7 @@ export default function SearchBar({ initialQuery }: { initialQuery: string }) {
                 {s.image_url && <img src={s.image_url} alt="" className="w-full h-full object-cover" />}
               </div>
               <span className="text-sm truncate flex-1">{s.title}</span>
-              <span className="font-mono text-jade-soft text-xs">${Number(s.price).toFixed(2)}</span>
+              <span className="font-mono text-jade-soft text-xs">{Number(s.price).toFixed(2)} ₼</span>
             </Link>
           ))}
         </div>

@@ -39,7 +39,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
-        <Link href="/" className="text-sm text-mist hover:text-paper mb-8 inline-block">← Bazar</Link>
+        <Link href="/" className="text-sm text-mist hover:text-paper mb-8 inline-block">← İtemBazar</Link>
         <form onSubmit={handleSubmit} className="rounded-2xl border border-line bg-panel p-8 space-y-4">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-gold mb-2">Xoş gəldiniz</p>

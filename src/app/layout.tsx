@@ -3,7 +3,7 @@ import "./globals.css";
 import SupportChatWidget from "./support-chat-widget";
 
 export const metadata: Metadata = {
-  title: "Bazar",
+  title: "İtemBazar",
   description: "Rəqəmsal məhsullar üçün etibarlı bazar",
 };
 

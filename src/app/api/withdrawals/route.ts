@@ -52,6 +52,6 @@ export async function POST(req: NextRequest) {
     note: `Çıxarış tələbi: ${destination.trim()}`,
   });
 
-  await notifyAdmin("Yeni çıxarış tələbi", `@${user.email} $${numericAmount.toFixed(2)} çıxarış tələb etdi (${destination.trim()}). Panelə keçib təsdiqləyin.`);
+  await notifyAdmin("Yeni çıxarış tələbi", `@${user.email} ${numericAmount.toFixed(2)} ₼ çıxarış tələb etdi (${destination.trim()}). Panelə keçib təsdiqləyin.`);
   return NextResponse.json({ withdrawal });
 }

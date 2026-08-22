@@ -123,7 +123,7 @@ export default function SupportPage() {
   return (
     <div className="min-h-screen">
       <header className="max-w-2xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/dashboard" className="font-display text-lg flex items-center gap-2"><span className="text-mist">←</span> Bazar</Link>
+        <Link href="/dashboard" className="font-display text-lg flex items-center gap-2"><span className="text-mist">←</span> İtemBazar</Link>
         <Link href="/dashboard" className="text-sm text-mist hover:text-paper">Dashboard</Link>
       </header>
       <main className="max-w-2xl mx-auto px-6 py-12 space-y-8">
@@ -164,7 +164,7 @@ export default function SupportPage() {
                   {listingHits.map((l) => (
                     <button key={l.id} onClick={() => setSelectedListing(l)} className="w-full flex items-center justify-between rounded-lg border border-line px-3 py-2 text-sm hover:border-jade">
                       <span className="truncate">{l.title}</span>
-                      <span className="text-jade-soft font-mono text-xs">${Number(l.price).toFixed(2)}</span>
+                      <span className="text-jade-soft font-mono text-xs">{Number(l.price).toFixed(2)} ₼</span>
                     </button>
                   ))}
                 </div>
@@ -216,7 +216,7 @@ export default function SupportPage() {
                       {myOrders.map((o) => (
                         <button key={o.id} disabled={loading} onClick={() => selectOrderForProblem(o)} className="w-full flex items-center justify-between rounded-lg border border-line px-3 py-2 text-sm hover:border-gold disabled:opacity-50">
                           <span className="truncate">{o.title}</span>
-                          <span className="font-mono text-jade-soft text-xs">${Number(o.amount).toFixed(2)}</span>
+                          <span className="font-mono text-jade-soft text-xs">{Number(o.amount).toFixed(2)} ₼</span>
                         </button>
                       ))}
                     </div>

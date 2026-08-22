@@ -4,7 +4,7 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen">
       <header className="max-w-2xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/" className="font-display text-lg">Bazar</Link>
+        <Link href="/" className="font-display text-lg">İtemBazar</Link>
         <Link href="/" className="text-sm text-mist hover:text-paper">← Ana səhifə</Link>
       </header>
       <main className="max-w-2xl mx-auto px-6 py-12 space-y-6 text-sm text-paper/90 leading-relaxed">

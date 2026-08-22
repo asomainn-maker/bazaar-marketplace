@@ -52,13 +52,13 @@ export default async function AdminOrderPage({
   return (
     <div className="min-h-screen">
       <header className="max-w-2xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/admin/orders" className="font-display text-lg">Bazar · Admin</Link>
+        <Link href="/admin/orders" className="font-display text-lg">İtemBazar · Admin</Link>
         <Link href="/admin/orders" className="text-sm text-mist hover:text-paper">← Sifarişlər</Link>
       </header>
       <main className="max-w-2xl mx-auto px-6 py-12">
         <div className="rounded-2xl border border-line bg-panel p-8">
           <h1 className="font-display text-2xl mb-1">{(order.listings as unknown as { title: string } | null)?.title}</h1>
-          <p className="font-mono text-jade-soft text-lg mb-4">${Number(order.amount).toFixed(2)}</p>
+          <p className="font-mono text-jade-soft text-lg mb-4">{Number(order.amount).toFixed(2)} ₼</p>
           <div className="text-sm text-mist space-y-1 mb-6">
             <p>Alıcı: @{nameMap[order.buyer_id] ?? "?"}</p>
             <p>Satıcı: @{nameMap[order.seller_id] ?? "?"}</p>

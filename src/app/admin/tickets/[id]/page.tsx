@@ -59,7 +59,7 @@ export default async function AdminTicketPage({
     return (
       <div className="min-h-screen">
         <header className="max-w-2xl mx-auto px-6 pt-8 flex items-center justify-between">
-          <Link href="/admin" className="font-display text-lg">Bazar · Admin</Link>
+          <Link href="/admin" className="font-display text-lg">İtemBazar · Admin</Link>
           <Link href="/admin" className="text-sm text-mist hover:text-paper">← Panel</Link>
         </header>
         <main className="max-w-2xl mx-auto px-6 py-12">
@@ -67,7 +67,7 @@ export default async function AdminTicketPage({
             <p className="text-xs uppercase tracking-widest text-gold mb-2">Sifariş mübahisəsi</p>
             <h1 className="font-display text-2xl mb-3">{order?.listings?.title ?? "Sifariş"}</h1>
             <div className="text-sm text-mist space-y-1 mb-6">
-              <p>Məbləğ: <span className="text-jade-soft font-mono">${Number(order?.amount ?? 0).toFixed(2)}</span></p>
+              <p>Məbləğ: <span className="text-jade-soft font-mono">{Number(order?.amount ?? 0).toFixed(2)} ₼</span></p>
               <p>Alıcı: @{nameMap[order?.buyer_id ?? ""] ?? "?"}</p>
               <p>Satıcı: @{nameMap[order?.seller_id ?? ""] ?? "?"}</p>
               <p>Status: {ticket.status}</p>
@@ -102,7 +102,7 @@ export default async function AdminTicketPage({
   return (
     <div className="min-h-screen">
       <header className="max-w-2xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/admin" className="font-display text-lg">Bazar · Admin</Link>
+        <Link href="/admin" className="font-display text-lg">İtemBazar · Admin</Link>
         <Link href="/admin" className="text-sm text-mist hover:text-paper">← Panel</Link>
       </header>
       <main className="max-w-2xl mx-auto px-6 py-12">

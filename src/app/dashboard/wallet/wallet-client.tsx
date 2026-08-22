@@ -100,13 +100,13 @@ export default function WalletInner() {
   return (
     <div className="min-h-screen">
       <header className="max-w-2xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/dashboard" className="font-display text-lg">Bazar</Link>
+        <Link href="/dashboard" className="font-display text-lg">İtemBazar</Link>
         <Link href="/dashboard" className="text-sm text-mist hover:text-paper">← Dashboard</Link>
       </header>
       <main className="max-w-2xl mx-auto px-6 py-12 space-y-6">
         <div>
           <p className="text-xs uppercase tracking-widest text-gold mb-1">Cüzdan</p>
-          <h1 className="font-display text-3xl">${balance !== null ? balance.toFixed(2) : "…"}</h1>
+          <h1 className="font-display text-3xl">{balance !== null ? balance.toFixed(2) : "…"} ₼</h1>
         </div>
 
         {message && <p className="text-sm bg-panel border border-line rounded-lg px-3 py-2">{message}</p>}
@@ -114,14 +114,14 @@ export default function WalletInner() {
         <form onSubmit={handleDeposit} className="rounded-2xl border border-line bg-panel p-6 space-y-3">
           <h2 className="font-display text-lg">Balans artır (PayPal)</h2>
           <div className="relative">
-            <span className="absolute left-4 top-3 text-mist text-sm">$</span>
+            <span className="absolute left-4 top-3 text-mist text-sm">₼</span>
             <input
               type="number" min="1" step="0.01" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)}
               className="w-full rounded-lg border border-line bg-bg pl-8 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-jade"
             />
           </div>
           <p className="text-xs text-mist">
-            Platform komissiyası (10%): ${feePreview.toFixed(2)} · Balansınıza əlavə olunacaq: <span className="text-jade-soft">${netPreview.toFixed(2)}</span>
+            Platform komissiyası (10%): {feePreview.toFixed(2)} ₼ · Balansınıza əlavə olunacaq: <span className="text-jade-soft">{netPreview.toFixed(2)} ₼</span>
           </p>
           <button type="submit" disabled={depositLoading} className="w-full rounded-full bg-jade text-bg font-semibold px-4 py-3 text-sm hover:bg-jade-soft transition disabled:opacity-50">
             {depositLoading ? "Yönləndirilir…" : "PayPal ilə ödə"}
@@ -131,7 +131,7 @@ export default function WalletInner() {
         <form onSubmit={handleWithdraw} className="rounded-2xl border border-line bg-panel p-6 space-y-3">
           <h2 className="font-display text-lg">Çıxarış tələb et</h2>
           <div className="relative">
-            <span className="absolute left-4 top-3 text-mist text-sm">$</span>
+            <span className="absolute left-4 top-3 text-mist text-sm">₼</span>
             <input
               type="number" min="1" step="0.01" required value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)}
               placeholder="Məbləğ"

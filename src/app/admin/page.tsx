@@ -58,7 +58,7 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen">
       <header className="max-w-3xl mx-auto px-6 pt-8 flex items-center justify-between flex-wrap gap-3">
-        <Link href="/dashboard" className="font-display text-lg">Bazar · Admin</Link>
+        <Link href="/dashboard" className="font-display text-lg">İtemBazar · Admin</Link>
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/admin/users" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">İstifadəçilər</Link>
           <Link href="/admin/orders" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">Sifarişlər ({activeOrdersCount ?? 0})</Link>
@@ -69,7 +69,7 @@ export default async function AdminPage() {
       <main className="max-w-3xl mx-auto px-6 py-12 space-y-10">
         <div className="rounded-2xl border border-jade/40 bg-jade/5 p-6">
           <p className="text-xs uppercase tracking-widest text-jade mb-1">Mənim qazancım (platform komissiyası)</p>
-          <p className="font-display text-3xl">${totalEarnings.toFixed(2)}</p>
+          <p className="font-display text-3xl">{totalEarnings.toFixed(2)} ₼</p>
         </div>
 
         <div>
@@ -140,7 +140,7 @@ export default async function AdminPage() {
               <div key={w.id} className="rounded-xl border border-line bg-panel p-4">
                 <div className="flex items-center justify-between mb-1">
                   <p className="font-medium">@{names[w.user_id] ?? "istifadəçi"}</p>
-                  <span className="font-mono text-gold">${Number(w.amount).toFixed(2)}</span>
+                  <span className="font-mono text-gold">{Number(w.amount).toFixed(2)} ₼</span>
                 </div>
                 <p className="text-xs text-mist mb-3">{w.destination}</p>
                 <WithdrawalActions id={w.id} />

@@ -279,3 +279,24 @@ create policy "Users can report" on public.listing_reports for insert with check
 alter table public.tickets add column if not exists category text;
 alter table public.tickets add column if not exists listing_id uuid references public.listings(id);
 alter table public.tickets add column if not exists target_user_id uuid references auth.users(id);
+
+-- Discord kateqoriyası
+insert into public.categories (slug, name, sort_order) values
+  ('discord', 'Discord xidmətləri', 17)
+on conflict (slug) do nothing;
+
+-- Avtomatik təslimat sistemi
+alter table public.listings add column if not exists is_auto_delivery boolean not null default false;
+
+create table if not exists public.listing_delivery_items (
+  id uuid primary key default gen_random_uuid(),
+  listing_id uuid not null references public.listings(id) on delete cascade,
+  content text not null,
+  delivered boolean not null default false,
+  order_id uuid references public.orders(id),
+  created_at timestamptz not null default now()
+);
+alter table public.listing_delivery_items enable row level security;
+create policy "Sellers view own delivery items" on public.listing_delivery_items for select using (
+  exists (select 1 from public.listings l where l.id = listing_id and l.seller_id = auth.uid())
+);

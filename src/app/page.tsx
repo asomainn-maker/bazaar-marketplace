@@ -114,7 +114,7 @@ export default async function Home({
     <div className="min-h-screen">
       <header className="border-b border-line">
         <div className="max-w-6xl mx-auto px-6 pt-6 pb-4 flex items-center justify-between gap-6">
-          <Link href="/" className="font-display text-xl tracking-tight shrink-0">Bazar</Link>
+          <Link href="/" className="font-display text-xl tracking-tight shrink-0">İtemBazar</Link>
 
           <div className="flex-1 max-w-xl hidden sm:block">
             <SearchBar initialQuery={q ?? ""} />
@@ -196,7 +196,7 @@ export default async function Home({
                 </p>
                 <p className="font-display text-base mb-1 truncate">{l.title}</p>
                 <p className="text-xs text-mist mb-3">@{sellerNames[l.seller_id] ?? "satıcı"}</p>
-                <p className="font-mono text-jade-soft text-lg">${Number(l.price).toFixed(2)}</p>
+                <p className="font-mono text-jade-soft text-lg">{Number(l.price).toFixed(2)} ₼</p>
               </div>
             </Link>
           ))}

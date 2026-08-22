@@ -37,7 +37,7 @@ export default async function AdminOrdersPage() {
   return (
     <div className="min-h-screen">
       <header className="max-w-3xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/admin" className="font-display text-lg">Bazar · Admin</Link>
+        <Link href="/admin" className="font-display text-lg">İtemBazar · Admin</Link>
         <Link href="/admin" className="text-sm text-mist hover:text-paper">← Panel</Link>
       </header>
       <main className="max-w-3xl mx-auto px-6 py-12">
@@ -48,7 +48,7 @@ export default async function AdminOrdersPage() {
             <Link key={o.id} href={`/admin/orders/${o.id}`} className="block rounded-xl border border-line bg-panel p-4 hover:border-jade transition-colors">
               <div className="flex items-center justify-between">
                 <p className="font-medium">{(o.listings as unknown as { title: string } | null)?.title}</p>
-                <span className="font-mono text-jade-soft">${Number(o.amount).toFixed(2)}</span>
+                <span className="font-mono text-jade-soft">{Number(o.amount).toFixed(2)} ₼</span>
               </div>
               <p className="text-xs text-mist mt-1">
                 @{names[o.buyer_id]} → @{names[o.seller_id]} · {STATUS_LABELS[o.status] ?? o.status}

@@ -43,12 +43,12 @@ export default function FilterBar({ sort, min, max }: { sort: string; min: strin
 
       <form onSubmit={applyPriceRange} className="flex items-center gap-2">
         <input
-          value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="Min $" type="number"
+          value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="Min ₼" type="number"
           className="w-20 rounded-full border border-line bg-panel px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-jade"
         />
         <span className="text-mist text-xs">—</span>
         <input
-          value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="Max $" type="number"
+          value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="Max ₼" type="number"
           className="w-20 rounded-full border border-line bg-panel px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-jade"
         />
         <button type="submit" className="rounded-full bg-panel border border-line px-3 py-2 text-xs hover:border-jade">Tətbiq et</button>

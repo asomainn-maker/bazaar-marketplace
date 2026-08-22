@@ -55,7 +55,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen">
       <header className="max-w-4xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/" className="font-display text-lg flex items-center gap-2"><span className="text-mist">←</span> Bazar</Link>
+        <Link href="/" className="font-display text-lg flex items-center gap-2"><span className="text-mist">←</span> İtemBazar</Link>
         <div className="flex items-center gap-3 text-sm">
           <Link href={`/u/${profile.username}`} className="text-jade-soft hover:underline">@{profile.username}</Link>
           <NotificationBell />
@@ -72,7 +72,7 @@ export default async function DashboardPage() {
         <div className="rounded-2xl border border-line bg-panel p-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-widest text-mist mb-1">Balans</p>
-            <p className="font-display text-3xl">${Number(profile.wallet_balance).toFixed(2)}</p>
+            <p className="font-display text-3xl">{Number(profile.wallet_balance).toFixed(2)} ₼</p>
           </div>
           <Link href="/dashboard/wallet" className="rounded-full bg-jade text-bg px-5 py-2.5 text-sm font-semibold">
             Cüzdan idarəsi
@@ -124,7 +124,8 @@ export default async function DashboardPage() {
                 <p className="text-xs text-mist">{l.status === "active" ? "Aktiv" : "Satılıb"}</p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="font-mono text-jade-soft">${Number(l.price).toFixed(2)}</span>
+                <span className="font-mono text-jade-soft">{Number(l.price).toFixed(2)} ₼</span>
+                {l.status === "active" && <Link href={`/dashboard/listings/${l.id}/edit`} className="text-xs text-mist hover:text-paper">Redaktə</Link>}
                 {l.status === "active" && <DeleteListingButton listingId={l.id} />}
               </div>
             </div>
@@ -138,7 +139,7 @@ export default async function DashboardPage() {
             <Link key={o.id} href={`/dashboard/orders/${o.id}`} className="block rounded-xl border border-line bg-panel p-4 hover:border-jade transition-colors">
               <div className="flex items-center justify-between">
                 <p className="font-medium">{(o.listings as unknown as { title: string } | null)?.title}</p>
-                <span className="font-mono text-jade-soft">${Number(o.amount).toFixed(2)}</span>
+                <span className="font-mono text-jade-soft">{Number(o.amount).toFixed(2)} ₼</span>
               </div>
               <p className="text-xs text-mist mt-1">{STATUS_LABELS[o.status] ?? o.status}</p>
             </Link>
@@ -152,7 +153,7 @@ export default async function DashboardPage() {
             <Link key={o.id} href={`/dashboard/orders/${o.id}`} className="block rounded-xl border border-line bg-panel p-4 hover:border-jade transition-colors">
               <div className="flex items-center justify-between">
                 <p className="font-medium">{(o.listings as unknown as { title: string } | null)?.title}</p>
-                <span className="font-mono text-jade-soft">${Number(o.amount).toFixed(2)}</span>
+                <span className="font-mono text-jade-soft">{Number(o.amount).toFixed(2)} ₼</span>
               </div>
               <p className="text-xs text-mist mt-1">{STATUS_LABELS[o.status] ?? o.status}</p>
             </Link>

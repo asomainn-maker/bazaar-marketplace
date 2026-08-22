@@ -52,7 +52,7 @@ export async function POST(
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   const title = (order.listings as unknown as { title: string } | null)?.title ?? "Sifariş";
-  await notifyUser(admin, order.seller_id, "Ödəniş balansınıza keçdi", `<b>${title}</b> üçün $${Number(order.amount).toFixed(2)} balansınıza əlavə olundu.`);
+  await notifyUser(admin, order.seller_id, "Ödəniş balansınıza keçdi", `<b>${title}</b> üçün ${Number(order.amount).toFixed(2)} ₼ balansınıza əlavə olundu.`);
 
   return NextResponse.json({ ok: true });
 }

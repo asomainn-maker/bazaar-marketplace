@@ -114,7 +114,7 @@ export default function AdminUsersPage() {
   return (
     <div className="min-h-screen">
       <header className="max-w-3xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/admin" className="font-display text-lg">Bazar · Admin</Link>
+        <Link href="/admin" className="font-display text-lg">İtemBazar · Admin</Link>
         <Link href="/admin" className="text-sm text-mist hover:text-paper">← Panel</Link>
       </header>
       <main className="max-w-3xl mx-auto px-6 py-12">
@@ -144,7 +144,7 @@ export default function AdminUsersPage() {
                     {!u.can_message && <span className="text-xs text-mist ml-2">⛔ Mesaj bloklu</span>}
                   </p>
                   <p className="text-xs text-mist">
-                    Balans: ${Number(u.wallet_balance).toFixed(2)} · Telefon: {u.phone ?? "yoxdur"} {u.phone_verified && "✓"}
+                    Balans: {Number(u.wallet_balance).toFixed(2)} ₼ · Telefon: {u.phone ?? "yoxdur"} {u.phone_verified && "✓"}
                   </p>
                 </div>
                 {!u.is_admin && (
@@ -188,7 +188,7 @@ export default function AdminUsersPage() {
                     <div key={l.id} className="flex items-center justify-between text-sm">
                       <span>{l.title} <span className="text-mist text-xs">({l.status === "active" ? "Aktiv" : "Satılıb"})</span></span>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-jade-soft text-xs">${Number(l.price).toFixed(2)}</span>
+                        <span className="font-mono text-jade-soft text-xs">{Number(l.price).toFixed(2)} ₼</span>
                         {l.status === "active" && (
                           <button onClick={() => removeOneListing(l.id)} className="text-xs text-gold hover:underline">Qaldır</button>
                         )}

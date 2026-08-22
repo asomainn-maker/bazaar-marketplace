@@ -60,7 +60,7 @@ export default async function ProfilePage({
   return (
     <div className="min-h-screen">
       <header className="max-w-4xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/" className="font-display text-lg">Bazar</Link>
+        <Link href="/" className="font-display text-lg">İtemBazar</Link>
         <Link href="/" className="text-sm text-mist hover:text-paper">← Bazara qayıt</Link>
       </header>
 
@@ -127,7 +127,7 @@ export default async function ProfilePage({
               <div className="p-4">
                 <p className="font-display text-sm truncate mb-1">{l.title}</p>
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-jade-soft">${Number(l.price).toFixed(2)}</span>
+                  <span className="font-mono text-jade-soft">{Number(l.price).toFixed(2)} ₼</span>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full ${l.status === "active" ? "bg-jade/10 text-jade" : "bg-line text-mist"}`}>
                     {l.status === "active" ? "Aktiv" : "Satılıb"}
                   </span>

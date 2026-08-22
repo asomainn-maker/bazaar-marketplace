@@ -85,7 +85,7 @@ export default async function ListingPage({
   return (
     <div className="min-h-screen">
       <header className="max-w-3xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/" className="font-display text-lg">Bazar</Link>
+        <Link href="/" className="font-display text-lg">İtemBazar</Link>
         <Link href="/" className="text-sm text-mist hover:text-paper">← Bazara qayıt</Link>
       </header>
 
@@ -113,7 +113,7 @@ export default async function ListingPage({
           </div>
 
           <div className="flex items-center justify-between border-t border-line pt-6">
-            <span className="font-mono text-2xl text-jade-soft">${Number(listing.price).toFixed(2)}</span>
+            <span className="font-mono text-2xl text-jade-soft">{Number(listing.price).toFixed(2)} ₼</span>
             <div className="flex items-center gap-2">
               {!isOwnListing && user && <MessageSellerButton sellerId={listing.seller_id} listingId={listing.id} />}
               {!isOwnListing && user && <ReportListingButton listingId={listing.id} />}
@@ -159,7 +159,7 @@ export default async function ListingPage({
                   </div>
                   <div className="p-3 flex flex-col justify-center min-w-0">
                     <p className="text-sm truncate">{l.title}</p>
-                    <p className="font-mono text-jade-soft text-sm">${Number(l.price).toFixed(2)}</p>
+                    <p className="font-mono text-jade-soft text-sm">{Number(l.price).toFixed(2)} ₼</p>
                   </div>
                 </Link>
               ))}

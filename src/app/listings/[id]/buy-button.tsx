@@ -9,7 +9,7 @@ export default function BuyButton({ listingId, price }: { listingId: string; pri
   const router = useRouter();
 
   async function handleBuy() {
-    if (!confirm(`$${price.toFixed(2)} ödəyib bu elanı almaq istəyirsiniz? Pul siz təsdiqləyənə qədər qorunacaq.`)) return;
+    if (!confirm(`${price.toFixed(2)} ₼ ödəyib bu elanı almaq istəyirsiniz? Pul siz təsdiqləyənə qədər qorunacaq.`)) return;
     setLoading(true);
     setError(null);
     try {

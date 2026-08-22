@@ -24,7 +24,7 @@ export default function MessagesListPage() {
   return (
     <div className="min-h-screen">
       <header className="max-w-2xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/dashboard" className="font-display text-lg flex items-center gap-2"><span className="text-mist">←</span> Bazar</Link>
+        <Link href="/dashboard" className="font-display text-lg flex items-center gap-2"><span className="text-mist">←</span> İtemBazar</Link>
         <Link href="/dashboard" className="text-sm text-mist hover:text-paper">Dashboard</Link>
       </header>
       <main className="max-w-2xl mx-auto px-6 py-12">

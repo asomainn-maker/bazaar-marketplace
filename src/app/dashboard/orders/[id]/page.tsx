@@ -42,7 +42,7 @@ export default async function OrderPage({
   return (
     <div className="min-h-screen">
       <header className="max-w-2xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/dashboard" className="font-display text-lg">Bazar</Link>
+        <Link href="/dashboard" className="font-display text-lg">İtemBazar</Link>
         <Link href="/dashboard" className="text-sm text-mist hover:text-paper">← Dashboard</Link>
       </header>
       <main className="max-w-2xl mx-auto px-6 py-12">
@@ -51,7 +51,7 @@ export default async function OrderPage({
           <h1 className="font-display text-2xl mb-1">
             {(order.listings as unknown as { title: string } | null)?.title}
           </h1>
-          <p className="font-mono text-jade-soft text-lg mb-6">${Number(order.amount).toFixed(2)}</p>
+          <p className="font-mono text-jade-soft text-lg mb-6">{Number(order.amount).toFixed(2)} ₼</p>
 
           <OrderActions
             orderId={order.id}

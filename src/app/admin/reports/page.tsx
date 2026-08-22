@@ -32,7 +32,7 @@ export default async function AdminReportsPage() {
   return (
     <div className="min-h-screen">
       <header className="max-w-3xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href="/admin" className="font-display text-lg">Bazar · Admin</Link>
+        <Link href="/admin" className="font-display text-lg">İtemBazar · Admin</Link>
         <Link href="/admin" className="text-sm text-mist hover:text-paper">← Panel</Link>
       </header>
       <main className="max-w-3xl mx-auto px-6 py-12">

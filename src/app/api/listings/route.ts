@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Giriş tələb olunur" }, { status: 401 });
 
-  const { title, description, price, category_id, image_url } = await req.json();
+  const { title, description, price, category_id, image_url, is_auto_delivery, delivery_content } = await req.json();
   if (typeof title !== "string" || !title.trim() || title.trim().length > 120) {
     return NextResponse.json({ error: "Başlıq 1-120 simvol olmalıdır" }, { status: 400 });
   }
@@ -37,6 +37,17 @@ export async function POST(req: NextRequest) {
       { status: 403 }
     );
   }
+  let deliveryLines: string[] = [];
+  if (is_auto_delivery) {
+    if (typeof delivery_content !== "string" || !delivery_content.trim()) {
+      return NextResponse.json({ error: "Avtomatik təslimat üçün ən azı 1 kod yazın" }, { status: 400 });
+    }
+    deliveryLines = delivery_content.split("\n").map((l: string) => l.trim()).filter(Boolean);
+    if (deliveryLines.length === 0) {
+      return NextResponse.json({ error: "Ən azı 1 kod tələb olunur" }, { status: 400 });
+    }
+  }
+
   const { data: listing, error } = await admin
     .from("listings")
     .insert({
@@ -46,10 +57,18 @@ export async function POST(req: NextRequest) {
       price: numericPrice,
       category_id: category_id || null,
       image_url: typeof image_url === "string" && image_url ? image_url : null,
+      is_auto_delivery: !!is_auto_delivery,
     })
-    .select("id, title, description, price, status, image_url, created_at")
+    .select("id, title, description, price, status, image_url, is_auto_delivery, created_at")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  if (is_auto_delivery && deliveryLines.length > 0) {
+    await admin.from("listing_delivery_items").insert(
+      deliveryLines.map((content) => ({ listing_id: listing.id, content }))
+    );
+  }
+
   return NextResponse.json({ listing });
 }
