@@ -29,7 +29,7 @@ export async function notifyAdmin(subject: string, message: string) {
   await sendEmail(
     adminEmail,
     `Bazar: ${subject}`,
-    `<p>${message}</p><p><a href="https://bazaar-flax.vercel.app/admin">Admin panelinə keç</a></p>`
+    `<p>${message}</p><p><a href="${process.env.NEXT_PUBLIC_SITE_URL || "https://bazaar-flax.vercel.app"}/admin">Admin panelinə keç</a></p>`
   );
 }
 
@@ -52,6 +52,6 @@ export async function notifyUser(
   await sendEmail(
     email,
     `Bazar: ${subject}`,
-    `<p>${message}</p><p><a href="https://bazaar-flax.vercel.app/dashboard">Dashboard-a keç</a></p>`
+    `<p>${message}</p><p><a href="${process.env.NEXT_PUBLIC_SITE_URL || "https://bazaar-flax.vercel.app"}/dashboard">Dashboard-a keç</a></p>`
   );
 }
