@@ -221,6 +221,7 @@ export default async function Home({
           <div className="flex gap-4">
             <Link href="/terms" className="hover:text-paper">İstifadə şərtləri</Link>
             <Link href="/privacy" className="hover:text-paper">Məxfilik siyasəti</Link>
+            <Link href="/dashboard/support" className="hover:text-paper">Dəstək</Link>
           </div>
         </div>
       </footer>

@@ -60,6 +60,7 @@ export default async function DashboardPage() {
           <Link href={`/u/${profile.username}`} className="text-jade-soft hover:underline">@{profile.username}</Link>
           <NotificationBell />
           <Link href="/dashboard/messages" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">Mesajlar</Link>
+          <Link href="/dashboard/support" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">Dəstək</Link>
           {profile.is_admin && (
             <Link href="/admin" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">Admin</Link>
           )}
