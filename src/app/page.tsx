@@ -29,7 +29,7 @@ export default async function Home({
 
   let query = admin
     .from("listings")
-    .select("id, title, price, image_url, created_at, seller_id, categories(name, slug)", { count: "exact" })
+    .select("id, title, price, image_url, created_at, seller_id, is_auto_delivery, categories(name, slug)", { count: "exact" })
     .eq("status", "active");
 
   if (q) query = query.ilike("title", `%${q}%`);
@@ -42,7 +42,7 @@ export default async function Home({
 
   type ListingRow = {
     id: string; title: string; price: number; image_url: string | null;
-    created_at: string; seller_id: string; categories: unknown;
+    created_at: string; seller_id: string; is_auto_delivery: boolean; categories: unknown;
   };
 
   let listings: ListingRow[] = [];
@@ -191,9 +191,12 @@ export default async function Home({
                 )}
               </div>
               <div className="p-4">
-                <p className="text-[10px] uppercase tracking-widest text-mist mb-1">
-                  {(l.categories as unknown as { name: string } | null)?.name ?? "Digər"}
-                </p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[10px] uppercase tracking-widest text-mist">
+                    {(l.categories as unknown as { name: string } | null)?.name ?? "Digər"}
+                  </p>
+                  {l.is_auto_delivery && <span className="text-[10px] text-jade">⚡ Avtomatik</span>}
+                </div>
                 <p className="font-display text-base mb-1 truncate">{l.title}</p>
                 <p className="text-xs text-mist mb-3">@{sellerNames[l.seller_id] ?? "satıcı"}</p>
                 <p className="font-mono text-jade-soft text-lg">{Number(l.price).toFixed(2)} ₼</p>

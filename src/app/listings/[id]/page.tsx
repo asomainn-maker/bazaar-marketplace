@@ -20,7 +20,7 @@ export default async function ListingPage({
 
   const { data: listing } = await admin
     .from("listings")
-    .select("id, title, description, price, status, seller_id, created_at, image_url, categories(name, slug)")
+    .select("id, title, description, price, status, seller_id, created_at, image_url, is_auto_delivery, categories(name, slug)")
     .eq("id", id)
     .maybeSingle();
 
@@ -37,6 +37,16 @@ export default async function ListingPage({
     .select("*", { count: "exact", head: true })
     .eq("seller_id", listing.seller_id)
     .eq("status", "completed");
+
+  let stockCount: number | null = null;
+  if (listing.is_auto_delivery) {
+    const { count } = await admin
+      .from("listing_delivery_items")
+      .select("*", { count: "exact", head: true })
+      .eq("listing_id", listing.id)
+      .eq("delivered", false);
+    stockCount = count ?? 0;
+  }
 
   const { data: reviews } = await admin
     .from("reviews")
@@ -110,6 +120,11 @@ export default async function ListingPage({
             )}
             <span className="text-mist">· {salesCount ?? 0} satış</span>
             {avgRating !== null && <span className="text-gold">· ★ {avgRating.toFixed(1)}</span>}
+            {stockCount !== null && (
+              <span className={stockCount > 0 ? "text-jade" : "text-gold"}>
+                · {stockCount > 0 ? `⚡ Avtomatik təslimat · Stokda: ${stockCount}` : "Stok bitib"}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center justify-between border-t border-line pt-6">
