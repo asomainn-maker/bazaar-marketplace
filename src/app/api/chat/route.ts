@@ -79,7 +79,7 @@ SƏRT QAYDALAR:
 - Sayt ilə əlaqəsi olmayan sual (ümumi bilik, başqa mövzular, kod yazma və s.) soruşularsa, nəzakətlə rədd et: "Mən yalnız İtemBazar saytı ilə bağlı suallara cavab verə bilərəm." de və başqa heç nə əlavə etmə.
 - İstifadəçinin öz məlumatlarına uyğun şəxsi cavab ver (məs. balansı, elanları haqqında sual versə yuxarıdakı İSTİFADƏÇİ məlumatından istifadə et).
 - Azərbaycan dilində, qısa, isti və konkret cavab ver.
-- Yalnız bu JSON formatında cavab ver, başqa heç nə yazma: {"text": "cavab", "link": {"href": "/path", "label": "Düymə"}} — link lazım deyilsə "link": null.`;
+- Cavabı verməzdən əvvəl "respond" alətini çağır.`;
 
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -93,6 +93,22 @@ SƏRT QAYDALAR:
         model: "claude-haiku-4-5-20251001",
         max_tokens: 500,
         system: systemPrompt,
+        tools: [
+          {
+            name: "respond",
+            description: "İstifadəçiyə son cavabı göndərmək üçün istifadə olunur.",
+            input_schema: {
+              type: "object",
+              properties: {
+                text: { type: "string", description: "İstifadəçiyə göstəriləcək cavab mətni" },
+                link_href: { type: "string", description: "Uyğun səhifənin yolu, məs. /dashboard/wallet. Lazım deyilsə boş buraxın." },
+                link_label: { type: "string", description: "Link düyməsinin mətni, məs. Cüzdana keç. Lazım deyilsə boş buraxın." },
+              },
+              required: ["text"],
+            },
+          },
+        ],
+        tool_choice: { type: "tool", name: "respond" },
         messages: messages.map((m: { role: string; text: string }) => ({
           role: m.role,
           content: m.text,
@@ -101,16 +117,22 @@ SƏRT QAYDALAR:
     });
 
     const data = await res.json();
-    const rawText = data.content?.[0]?.text ?? "";
+    const toolUse = data.content?.find((c: { type: string }) => c.type === "tool_use");
 
-    let parsed: { text: string; link: { href: string; label: string } | null };
-    try {
-      parsed = JSON.parse(rawText);
-    } catch {
-      parsed = { text: rawText || "Cavab hazırlana bilmədi, yenidən cəhd edin.", link: null };
+    if (!toolUse) {
+      // API xətası ola bilər (açar səhv/limit bitib və s.) — Anthropic-in xəta mesajını əks etdirək.
+      const errMsg = data.error?.message || "AI cavab vermədi";
+      return NextResponse.json({
+        text: `Texniki problem: ${errMsg}. Dəstək bölməsindən müraciət göndərə bilərsiniz.`,
+        link: { href: "/dashboard/support", label: "Dəstəyə keç" },
+      });
     }
 
-    return NextResponse.json(parsed);
+    const input = toolUse.input as { text: string; link_href?: string; link_label?: string };
+    return NextResponse.json({
+      text: input.text,
+      link: input.link_href && input.link_label ? { href: input.link_href, label: input.link_label } : null,
+    });
   } catch {
     return NextResponse.json({
       text: "Bir xəta baş verdi. Zəhmət olmasa Dəstək bölməsindən müraciət göndərin.",
