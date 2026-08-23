@@ -64,6 +64,13 @@ const FAQ: { keywords: string[]; reply: Reply }[] = [
     },
   },
   {
+    keywords: ["ticket", "dəstək aç", "destek ac", "dəstəyə", "destege", "necə müraciət", "nece muraciet", "necə əlaqə", "nece elaqe", "kömək laz", "komek laz", "əlaqə saxla", "elaqe sahla", "haradan açır", "haradan acir", "haradan yazım", "haradan yazim"],
+    reply: {
+      text: "Dəstək bölməsindən (Dashboard → Dəstək) kateqoriya seçib müraciət göndərə bilərsiniz: elan/istifadəçi report etmək, fikir-tövsiyə, elan alanda problem, digər problem. Admin qısa müddətdə cavab verəcək.",
+      link: { href: "/dashboard/support", label: "Dəstəyə keç" },
+    },
+  },
+  {
     keywords: ["mesaj", "çat", "chat", "satıcı ilə", "saticiya yaz"],
     reply: {
       text: "Elan səhifəsində \"Satıcıya yaz\" düyməsi ilə birbaşa satıcı ilə çat aça bilərsiniz. Bütün mesajlarınız Dashboard → Mesajlar bölməsindədir.",
@@ -140,6 +147,70 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
           text: `Hazırkı balansınız: ${Number(profile?.wallet_balance ?? 0).toFixed(2)} ₼.`,
           link: { href: "/dashboard/wallet", label: "Cüzdana keç" },
+        });
+      }
+    } catch {
+      // aşağıdakı ümumi cavaba düşsün
+    }
+  }
+
+  // Şəxsi elan sualı
+  if (/elanlar[ıi]m|satd[ıi][gğ][ıi]m elan|mənim elan|menim elan/.test(text.toLowerCase())) {
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const admin = createAdminClient();
+        const { data: listings } = await admin
+          .from("listings").select("title, price, status").eq("seller_id", user.id).order("created_at", { ascending: false }).limit(10);
+        const active = (listings ?? []).filter((l) => l.status === "active");
+        const sold = (listings ?? []).filter((l) => l.status === "sold");
+        const listText = active.length > 0
+          ? active.map((l) => `• ${l.title} — ${Number(l.price).toFixed(2)} ₼`).join("\n")
+          : "Aktiv elanınız yoxdur.";
+        return NextResponse.json({
+          text: `Sizin ${active.length} aktiv, ${sold.length} satılmış elanınız var.\n\n${listText}`,
+          link: { href: "/dashboard", label: "Dashboard-a keç" },
+        });
+      }
+    } catch {
+      // aşağıdakı ümumi cavaba düşsün
+    }
+  }
+
+  // Şəxsi sifariş sualı (alışlar)
+  if (/sifari[şs]lər[ıi]m|ald[ıi][gğ][ıi]m elan|nə alm[ıi][şs][ae]m|ne almisham/.test(text.toLowerCase())) {
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const admin = createAdminClient();
+        const { data: orders } = await admin
+          .from("orders").select("amount, status, listings(title)").eq("buyer_id", user.id).order("created_at", { ascending: false }).limit(10);
+        const list = (orders ?? []).map((o) => `• ${(o.listings as unknown as { title: string } | null)?.title ?? "Sifariş"} — ${Number(o.amount).toFixed(2)} ₼ (${o.status})`).join("\n");
+        return NextResponse.json({
+          text: (orders ?? []).length > 0 ? `Alışlarınız:\n\n${list}` : "Hələ heç bir alışınız yoxdur.",
+          link: { href: "/dashboard", label: "Dashboard-a keç" },
+        });
+      }
+    } catch {
+      // aşağıdakı ümumi cavaba düşsün
+    }
+  }
+
+  // Şəxsi satış sualı
+  if (/sat[ıi][şs]lar[ıi]m|kimə satd[ıi]m|kime satdim/.test(text.toLowerCase())) {
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const admin = createAdminClient();
+        const { data: orders } = await admin
+          .from("orders").select("amount, status, listings(title)").eq("seller_id", user.id).order("created_at", { ascending: false }).limit(10);
+        const list = (orders ?? []).map((o) => `• ${(o.listings as unknown as { title: string } | null)?.title ?? "Sifariş"} — ${Number(o.amount).toFixed(2)} ₼ (${o.status})`).join("\n");
+        return NextResponse.json({
+          text: (orders ?? []).length > 0 ? `Satışlarınız:\n\n${list}` : "Hələ heç bir satışınız yoxdur.",
+          link: { href: "/dashboard", label: "Dashboard-a keç" },
         });
       }
     } catch {
