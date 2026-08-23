@@ -2,141 +2,156 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const SITE_KNOWLEDGE = `SAYT NECƏ İŞLƏYİR (İtemBazar — P2P rəqəmsal məhsul bazarı, domainverse.store):
+type Reply = { text: string; link: { href: string; label: string } | null };
 
-1. CÜZDAN VƏ BALANS ARTIRMA:
-- Dashboard → Cüzdan (/dashboard/wallet) səhifəsindən PayPal ilə balans artırılır.
-- Yatırılan məbləğdən 10% platform komissiyası tutulur.
-- Qiymətlər saytda ₼ (AZN) ilə göstərilir.
-- Çıxarış: "Çıxarış tələb et" formu (PayPal email/IBAN), admin təsdiqləyəndən sonra ödənilir.
+const GREETINGS = ["salam", "salaam", "sagol", "sağol", "hi", "hello", "hey", "necəsən", "necesen", "xoş", "xosh gundu", "günaydın", "axşamın xeyir"];
 
-2. ALIŞ-SATIŞ VƏ TƏHLÜKƏSİZLİK (ESCROW):
-- Ödəniş alıcının balansından çıxır, amma satıcıya DƏRHAL getmir — qorunmada saxlanılır.
-- Satıcı təhvil verib "Təslim etdim" basır (adi elanlar) VƏ YA avtomatik təslimatlı elanlarda kod dərhal alıcının çatına göndərilir.
-- Alıcı "Təhvil aldım" desə pul dərhal satıcıya keçir; 3 gün cavabsız qalarsa avtomatik keçir.
-- Satıcı hələ təslim etməyibsə "İmtina et" ilə ləğv edib pulu geri qaytara bilər.
-- Problem: sifariş səhifəsində "Problem var, dəstəyə müraciət et" — mübahisə açılır, admin qərar verir.
+const FAQ: { keywords: string[]; reply: Reply }[] = [
+  {
+    keywords: ["balans art", "pul art", "pul yükl", "deposit", "paypal", "kart il", "necə pul", "pul necə", "balans dolduram", "balans dol"],
+    reply: {
+      text: "Balansınızı artırmaq üçün Dashboard → Cüzdan səhifəsinə keçib PayPal ilə istədiyiniz məbləği ödəyin. Yatırılan məbləğdən 10% platform komissiyası tutulur, qalanı balansınıza əlavə olunur.",
+      link: { href: "/dashboard/wallet", label: "Cüzdana keç" },
+    },
+  },
+  {
+    keywords: ["çıxar", "cixar", "withdraw", "pulumu al", "pulumu çıxar"],
+    reply: {
+      text: "Qazandığınız pulu çıxarmaq üçün Cüzdan səhifəsində \"Çıxarış tələb et\" formunu doldurun (PayPal email və ya IBAN). Admin təsdiqləyəndən sonra ödəniş göndərilir.",
+      link: { href: "/dashboard/wallet", label: "Cüzdana keç" },
+    },
+  },
+  {
+    keywords: ["elan qoy", "elan yerləşdir", "elan yerlesdir", "necə sat", "nece sat", "elan yarat"],
+    reply: {
+      text: "Elan yerləşdirmək üçün əvvəlcə telefon nömrənizi doğrulamalısınız (admin sizə zəng edib kod deyəcək), sonra Dashboard → \"+ Yeni elan\"dan davam edin.",
+      link: { href: "/dashboard/new-listing", label: "Yeni elan" },
+    },
+  },
+  {
+    keywords: ["telefon", "doğrul", "dogrul", "nömrə", "nomre"],
+    reply: {
+      text: "Telefon doğrulaması üçün nömrənizi göndərin — admin sizə zəng edib təsdiq kodu deyəcək, kodu saytda müvafiq sahəyə yazmalısınız.",
+      link: { href: "/dashboard/verify-phone", label: "Nömrə doğrula" },
+    },
+  },
+  {
+    keywords: ["avtomatik təslimat", "avtomatik teslimat", "gift card", "stok", "kod avtomatik"],
+    reply: {
+      text: "Avtomatik təslimatlı elan yaratmaq üçün \"+ Yeni elan\"da \"Avtomatik təslimat\" qutusunu işarələyin və kodlarınızı (hər sətirdə bir kod) yazın. Alıcı aldıqda bir kod avtomatik çat bölməsinə göndərilir.",
+      link: { href: "/dashboard/new-listing", label: "Yeni elan" },
+    },
+  },
+  {
+    keywords: ["aldat", "dələduz", "delaeduz", "hiylə", "hiyle", "scam", "fırıl", "firil", "dolandır"],
+    reply: {
+      text: "Ödədiyiniz pul artıq qorunmadadır (satıcıya dərhal getmir). Sifariş səhifənizdə \"Problem var, dəstəyə müraciət et\" düyməsi ilə mübahisə açın, komandamız araşdıracaq.",
+      link: { href: "/dashboard/support", label: "Dəstəyə keç" },
+    },
+  },
+  {
+    keywords: ["mübahisə", "mubahise", "geri qaytar", "refund", "iade"],
+    reply: {
+      text: "Sifariş səhifənizdə \"Problem var, dəstəyə müraciət et\" düyməsi ilə mübahisə aça bilərsiniz. Pul admin qərar verənə qədər (və ya alıcı təsdiqləyənə/3 gün keçənə qədər) qorunmada qalır.",
+      link: { href: "/dashboard", label: "Dashboard" },
+    },
+  },
+  {
+    keywords: ["report", "şikayət", "sikayet"],
+    reply: {
+      text: "Bir elanı və ya istifadəçini report etmək üçün Dəstək bölməsindən uyğun kateqoriyanı seçin.",
+      link: { href: "/dashboard/support", label: "Dəstəyə keç" },
+    },
+  },
+  {
+    keywords: ["mesaj", "çat", "chat", "satıcı ilə", "saticiya yaz"],
+    reply: {
+      text: "Elan səhifəsində \"Satıcıya yaz\" düyməsi ilə birbaşa satıcı ilə çat aça bilərsiniz. Bütün mesajlarınız Dashboard → Mesajlar bölməsindədir.",
+      link: { href: "/dashboard/messages", label: "Mesajlara keç" },
+    },
+  },
+  {
+    keywords: ["rəy", "rey", "reytinq", "ulduz", "review"],
+    reply: {
+      text: "Tamamlanmış sifarişdən sonra satıcıya ulduzla reytinq və rəy yaza bilərsiniz — bu, onun ictimai profilində görünür.",
+      link: null,
+    },
+  },
+  {
+    keywords: ["redaktə", "redakte", "elan dəyiş", "elan deyis", "şəkli dəyiş", "sekili deyis"],
+    reply: {
+      text: "Dashboard-da öz elanınızın yanındakı \"Redaktə\" düyməsi ilə şəkli və təsviri dəyişə bilərsiniz. Başlığı isə dəyişmək mümkün deyil.",
+      link: { href: "/dashboard", label: "Dashboard" },
+    },
+  },
+  {
+    keywords: ["komissiya", "faiz", "10%", "nə qədər tutulur", "ne qeder tutulur"],
+    reply: {
+      text: "Balans artırarkən 10% platform komissiyası tutulur. Məsələn 100 ₼ yatırsanız, 90 ₼ balansınıza əlavə olunur.",
+      link: null,
+    },
+  },
+  {
+    keywords: ["kateqoriya", "hansı məhsul", "ne satila biler", "nə satıla bilər"],
+    reply: {
+      text: "Oyun hesabları, Steam, Valorant, PUBG Mobile, Roblox, Fortnite, CS2, LoL, Discord, Instagram/TikTok/YouTube xidmətləri, Netflix/Spotify, gift kartlar, CD-Key və digər rəqəmsal məhsullar satıla bilər.",
+      link: { href: "/", label: "Kateqoriyalara bax" },
+    },
+  },
+];
 
-3. AVTOMATİK TƏSLİMAT: Satıcı elan yaradarkən "Avtomatik təslimat" seçib kodları (hər sətirdə bir kod, məs. gift card) yazır. Alıcı alanda bir kod avtomatik çat bölməsinə göndərilir, stok azalır.
+function findFaq(message: string) {
+  const lower = message.toLowerCase();
+  for (const item of FAQ) {
+    if (item.keywords.some((k) => lower.includes(k))) return item.reply;
+  }
+  return null;
+}
 
-4. ELAN YERLƏŞDİRMƏK: Əvvəlcə telefon doğrulanmalıdır (/dashboard/verify-phone) — nömrə göndərilir, admin zəng edib kod deyir. Sonra /dashboard/new-listing.
-
-5. MESAJLAŞMA: Elan səhifəsində "Satıcıya yaz" ilə çat (/dashboard/messages). Sifariş edəndə çata avtomatik sifariş məlumatı yazılır.
-
-6. ELANI REDAKTƏ: Dashboard-dan "Redaktə" — yalnız şəkil və təsvir dəyişdirilə bilər, başlıq yox.
-
-7. DƏSTƏK (/dashboard/support): Kateqoriyalar — Elanı report etmək, İstifadəçini report etmək, Sayt haqqında fikir/tövsiyə, Elan alanda problem yaşamaq (öz sifarişindən seçir, real mübahisə açır), Problemlə qarşılaşmaq, Digər.
-
-8. RƏY VƏ PROFİL: Tamamlanmış sifarişdən sonra rəy/reytinq yazılır. İctimai profil: /u/username.
-
-9. KATEQORİYALAR: Oyun hesabları, Steam, Valorant, PUBG Mobile, Roblox, Fortnite, CS2, LoL, Discord, Instagram/TikTok/YouTube, Netflix/Spotify, gift kartlar, CD-Key və s.`;
+function isGreeting(message: string) {
+  const lower = message.toLowerCase().trim();
+  return GREETINGS.some((g) => lower === g || lower.startsWith(g + " ") || lower.startsWith(g + "!"));
+}
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({
-      text: "Hazırda AI köməkçi aktiv deyil. Zəhmət olmasa Dəstək bölməsindən müraciət göndərin.",
-      link: { href: "/dashboard/support", label: "Dəstəyə keç" },
-    });
-  }
-
   const { messages } = await req.json();
   if (!Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json({ error: "Mesaj tələb olunur" }, { status: 400 });
   }
 
-  // İstifadəçi konteksti (giriş edibsə).
-  let userContext = "İSTİFADƏÇİ: Giriş etməyib (qonaq).";
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const admin = createAdminClient();
-      const { data: profile } = await admin
-        .from("profiles")
-        .select("username, wallet_balance, phone_verified, is_admin")
-        .eq("id", user.id)
-        .maybeSingle();
-      const { count: listingCount } = await admin
-        .from("listings").select("*", { count: "exact", head: true }).eq("seller_id", user.id).eq("status", "active");
-      const { count: orderCount } = await admin
-        .from("orders").select("*", { count: "exact", head: true }).eq("buyer_id", user.id);
+  const lastUserMsg = [...messages].reverse().find((m: { role: string }) => m.role === "user");
+  const text: string = lastUserMsg?.text ?? "";
 
-      userContext = `İSTİFADƏÇİ: @${profile?.username ?? "?"} · Balans: ${Number(profile?.wallet_balance ?? 0).toFixed(2)} ₼ · Telefon doğrulanıb: ${profile?.phone_verified ? "bəli" : "xeyr"} · Aktiv elanları: ${listingCount ?? 0} · Ümumi sifarişi: ${orderCount ?? 0}${profile?.is_admin ? " · ADMİN" : ""}`;
-    }
-  } catch {
-    // kontekst alınmasa da davam et
+  if (isGreeting(text)) {
+    return NextResponse.json({
+      text: "Salam! Sizə İtemBazar ilə bağlı (balans, elan, sifariş, təhlükəsizlik, dəstək və s.) necə kömək edə bilərəm?",
+      link: null,
+    });
   }
 
-  const systemPrompt = `Sən "İtemBazar" saytının rəsmi AI köməkçisisən.
-
-${SITE_KNOWLEDGE}
-
-${userContext}
-
-SƏRT QAYDALAR:
-- YALNIZ İtemBazar saytı ilə bağlı suallara cavab ver (balans, elan, sifariş, ödəniş, dəstək, təhlükəsizlik, hesab və s.).
-- Sayt ilə əlaqəsi olmayan sual (ümumi bilik, başqa mövzular, kod yazma və s.) soruşularsa, nəzakətlə rədd et: "Mən yalnız İtemBazar saytı ilə bağlı suallara cavab verə bilərəm." de və başqa heç nə əlavə etmə.
-- İstifadəçinin öz məlumatlarına uyğun şəxsi cavab ver (məs. balansı, elanları haqqında sual versə yuxarıdakı İSTİFADƏÇİ məlumatından istifadə et).
-- Azərbaycan dilində, qısa, isti və konkret cavab ver.
-- Cavabı verməzdən əvvəl "respond" alətini çağır.`;
-
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 500,
-        system: systemPrompt,
-        tools: [
-          {
-            name: "respond",
-            description: "İstifadəçiyə son cavabı göndərmək üçün istifadə olunur.",
-            input_schema: {
-              type: "object",
-              properties: {
-                text: { type: "string", description: "İstifadəçiyə göstəriləcək cavab mətni" },
-                link_href: { type: "string", description: "Uyğun səhifənin yolu, məs. /dashboard/wallet. Lazım deyilsə boş buraxın." },
-                link_label: { type: "string", description: "Link düyməsinin mətni, məs. Cüzdana keç. Lazım deyilsə boş buraxın." },
-              },
-              required: ["text"],
-            },
-          },
-        ],
-        tool_choice: { type: "tool", name: "respond" },
-        messages: messages.map((m: { role: string; text: string }) => ({
-          role: m.role,
-          content: m.text,
-        })),
-      }),
-    });
-
-    const data = await res.json();
-    const toolUse = data.content?.find((c: { type: string }) => c.type === "tool_use");
-
-    if (!toolUse) {
-      // API xətası ola bilər (açar səhv/limit bitib və s.) — Anthropic-in xəta mesajını əks etdirək.
-      const errMsg = data.error?.message || "AI cavab vermədi";
-      return NextResponse.json({
-        text: `Texniki problem: ${errMsg}. Dəstək bölməsindən müraciət göndərə bilərsiniz.`,
-        link: { href: "/dashboard/support", label: "Dəstəyə keç" },
-      });
+  // Şəxsi balans sualı
+  if (/balans[ıi]m|mənim balans|menim balans/.test(text.toLowerCase())) {
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const admin = createAdminClient();
+        const { data: profile } = await admin.from("profiles").select("wallet_balance").eq("id", user.id).maybeSingle();
+        return NextResponse.json({
+          text: `Hazırkı balansınız: ${Number(profile?.wallet_balance ?? 0).toFixed(2)} ₼.`,
+          link: { href: "/dashboard/wallet", label: "Cüzdana keç" },
+        });
+      }
+    } catch {
+      // aşağıdakı ümumi cavaba düşsün
     }
-
-    const input = toolUse.input as { text: string; link_href?: string; link_label?: string };
-    return NextResponse.json({
-      text: input.text,
-      link: input.link_href && input.link_label ? { href: input.link_href, label: input.link_label } : null,
-    });
-  } catch {
-    return NextResponse.json({
-      text: "Bir xəta baş verdi. Zəhmət olmasa Dəstək bölməsindən müraciət göndərin.",
-      link: { href: "/dashboard/support", label: "Dəstəyə keç" },
-    });
   }
+
+  const faqMatch = findFaq(text);
+  if (faqMatch) return NextResponse.json(faqMatch);
+
+  return NextResponse.json({
+    text: "Mən yalnız İtemBazar saytı ilə bağlı suallara (balans, elan, sifariş, təhlükəsizlik, dəstək və s.) kömək edə bilərəm. Probleminizi dəqiqləşdirib Dəstək bölməsindən müraciət göndərə bilərsiniz.",
+    link: { href: "/dashboard/support", label: "Dəstəyə keç" },
+  });
 }
