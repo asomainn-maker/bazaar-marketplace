@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyAdmin } from "@/lib/email";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(
   req: NextRequest,
@@ -18,6 +19,11 @@ export async function POST(
   }
 
   const admin = createAdminClient();
+
+  if (!(await checkRateLimit(admin, user.id, "report_listing", 10, 3600))) {
+    return NextResponse.json({ error: "Çox tez-tez report edirsiniz. Bir az sonra yenidən cəhd edin." }, { status: 429 });
+  }
+
   const { data: listing } = await admin.from("listings").select("title").eq("id", id).maybeSingle();
   if (!listing) return NextResponse.json({ error: "Elan tapılmadı" }, { status: 404 });
 

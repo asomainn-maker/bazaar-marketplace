@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyAdmin } from "@/lib/email";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function GET() {
   const supabase = await createClient();
@@ -59,6 +60,11 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = createAdminClient();
+
+  if (!(await checkRateLimit(admin, user.id, "support_ticket", 5, 3600))) {
+    return NextResponse.json({ error: "Çox tez-tez müraciət göndərirsiniz. Bir az sonra yenidən cəhd edin." }, { status: 429 });
+  }
+
   const { data: ticket, error } = await admin
     .from("tickets")
     .insert({

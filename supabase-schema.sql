@@ -300,3 +300,12 @@ alter table public.listing_delivery_items enable row level security;
 create policy "Sellers view own delivery items" on public.listing_delivery_items for select using (
   exists (select 1 from public.listings l where l.id = listing_id and l.seller_id = auth.uid())
 );
+
+-- Rate limiting üçün jurnal
+create table if not exists public.rate_limit_log (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  action text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_rate_limit_lookup on public.rate_limit_log(user_id, action, created_at);

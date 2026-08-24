@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 async function assertParticipant(
   admin: ReturnType<typeof createAdminClient>,
@@ -66,6 +67,10 @@ export async function POST(
   const { data: senderProfile } = await admin.from("profiles").select("can_message").eq("id", user.id).maybeSingle();
   if (senderProfile?.can_message === false) {
     return NextResponse.json({ error: "Admin sizin mesaj yazma icazənizi bloklayıb" }, { status: 403 });
+  }
+
+  if (!(await checkRateLimit(admin, user.id, "send_message", 30, 300))) {
+    return NextResponse.json({ error: "Çox tez-tez mesaj göndərirsiniz. Bir az gözləyin." }, { status: 429 });
   }
 
   const { data: message, error } = await admin

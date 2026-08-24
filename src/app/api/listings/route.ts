@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -17,6 +18,10 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = createAdminClient();
+
+  if (!(await checkRateLimit(admin, user.id, "create_listing", 8, 3600))) {
+    return NextResponse.json({ error: "Çox tez-tez elan yaradırsınız. Bir az sonra yenidən cəhd edin." }, { status: 429 });
+  }
 
   const { data: sellerProfile } = await admin
     .from("profiles")
