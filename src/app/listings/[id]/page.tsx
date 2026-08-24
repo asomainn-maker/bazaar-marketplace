@@ -10,6 +10,21 @@ import ReportListingButton from "./report-listing-button";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const admin = createAdminClient();
+  const { data: listing } = await admin.from("listings").select("title, description, price").eq("id", id).maybeSingle();
+  if (!listing) return { title: "Elan tapılmadı" };
+  return {
+    title: listing.title,
+    description: listing.description?.slice(0, 150) ?? `${listing.title} — ${Number(listing.price).toFixed(2)} ₼. İtemBazar-da təhlükəsiz alış-satış.`,
+  };
+}
+
 export default async function ListingPage({
   params,
 }: {
