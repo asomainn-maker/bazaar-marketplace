@@ -22,6 +22,10 @@ export default async function Home({
 
   const { data: categories } = await admin.from("categories").select("id, slug, name").order("sort_order");
 
+  const { count: totalUsers } = await admin.from("profiles").select("*", { count: "exact", head: true });
+  const { count: totalSales } = await admin.from("orders").select("*", { count: "exact", head: true }).eq("status", "completed");
+  const { count: totalListings } = await admin.from("listings").select("*", { count: "exact", head: true }).eq("status", "active");
+
   const PAGE_SIZE = 24;
   const currentPage = Math.max(1, parseInt(page ?? "1", 10) || 1);
   const from = (currentPage - 1) * PAGE_SIZE;
@@ -156,12 +160,17 @@ export default async function Home({
 
       <main className="max-w-6xl mx-auto px-6 py-10">
         {!q && !category && (
-          <div className="mb-10">
+          <div className="mb-8">
             <p className="text-xs uppercase tracking-[.25em] text-gold mb-3">Etibarlı P2P bazar</p>
             <h1 className="font-display text-4xl md:text-5xl mb-3 max-w-2xl">
               Ödədiyiniz pul siz təsdiqləyənə qədər qorunur.
             </h1>
-            <p className="text-mist max-w-xl">Problem olarsa, dəstək komandası araya girir və kimin haqlı olduğuna qərar verir.</p>
+            <p className="text-mist max-w-xl mb-6">Problem olarsa, dəstək komandası araya girir və kimin haqlı olduğuna qərar verir.</p>
+            <div className="flex flex-wrap gap-6 text-sm">
+              <div><span className="font-display text-xl text-jade-soft">{totalUsers ?? 0}+</span> <span className="text-mist">istifadəçi</span></div>
+              <div><span className="font-display text-xl text-jade-soft">{totalSales ?? 0}+</span> <span className="text-mist">tamamlanmış satış</span></div>
+              <div><span className="font-display text-xl text-jade-soft">{totalListings ?? 0}+</span> <span className="text-mist">aktiv elan</span></div>
+            </div>
           </div>
         )}
 

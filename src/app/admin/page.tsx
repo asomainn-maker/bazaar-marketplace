@@ -36,6 +36,27 @@ export default async function AdminPage() {
     .order("created_at", { ascending: false });
 
   const { data: feeRows } = await admin.from("deposits").select("fee_amount").eq("status", "completed");
+
+  // Statistika: son 7 gün ərzində gündəlik yeni istifadəçi + satış həcmi
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: recentProfiles } = await admin.from("profiles").select("created_at").gte("created_at", sevenDaysAgo);
+  const { data: recentOrders } = await admin.from("orders").select("created_at, amount").eq("status", "completed").gte("created_at", sevenDaysAgo);
+
+  const dayLabels: string[] = [];
+  const newUsersByDay: number[] = [];
+  const salesByDay: number[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    const key = d.toISOString().slice(0, 10);
+    dayLabels.push(d.toLocaleDateString("az", { day: "2-digit", month: "2-digit" }));
+    newUsersByDay.push((recentProfiles ?? []).filter((p) => p.created_at.startsWith(key)).length);
+    salesByDay.push(
+      (recentOrders ?? []).filter((o) => o.created_at.startsWith(key)).reduce((sum, o) => sum + Number(o.amount), 0)
+    );
+  }
+
+  const { count: totalUsers } = await admin.from("profiles").select("*", { count: "exact", head: true });
+  const { count: totalCompletedSales } = await admin.from("orders").select("*", { count: "exact", head: true }).eq("status", "completed");
   const totalEarnings = (feeRows ?? []).reduce((sum, r) => sum + Number(r.fee_amount), 0);
 
   const { count: activeOrdersCount } = await admin
@@ -67,9 +88,42 @@ export default async function AdminPage() {
         </nav>
       </header>
       <main className="max-w-3xl mx-auto px-6 py-12 space-y-10">
-        <div className="rounded-2xl border border-jade/40 bg-jade/5 p-6">
-          <p className="text-xs uppercase tracking-widest text-jade mb-1">Mənim qazancım (platform komissiyası)</p>
-          <p className="font-display text-3xl">{totalEarnings.toFixed(2)} ₼</p>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div className="rounded-2xl border border-jade/40 bg-jade/5 p-6">
+            <p className="text-xs uppercase tracking-widest text-jade mb-1">Qazancım</p>
+            <p className="font-display text-2xl">{totalEarnings.toFixed(2)} ₼</p>
+          </div>
+          <div className="rounded-2xl border border-line bg-panel p-6">
+            <p className="text-xs uppercase tracking-widest text-mist mb-1">Cəmi istifadəçi</p>
+            <p className="font-display text-2xl">{totalUsers ?? 0}</p>
+          </div>
+          <div className="rounded-2xl border border-line bg-panel p-6">
+            <p className="text-xs uppercase tracking-widest text-mist mb-1">Tamamlanmış satış</p>
+            <p className="font-display text-2xl">{totalCompletedSales ?? 0}</p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-line bg-panel p-6">
+          <p className="text-xs uppercase tracking-widest text-mist mb-4">Son 7 gün</p>
+          <div className="grid grid-cols-7 gap-2">
+            {dayLabels.map((label, i) => {
+              const maxUsers = Math.max(...newUsersByDay, 1);
+              const maxSales = Math.max(...salesByDay, 1);
+              return (
+                <div key={i} className="text-center">
+                  <div className="h-20 flex flex-col justify-end gap-0.5 mb-1">
+                    <div className="w-full bg-gold/60 rounded-t" style={{ height: `${(salesByDay[i] / maxSales) * 100}%`, minHeight: salesByDay[i] > 0 ? "3px" : "0" }} title={`Satış: ${salesByDay[i].toFixed(2)} ₼`} />
+                    <div className="w-full bg-jade/60 rounded-t" style={{ height: `${(newUsersByDay[i] / maxUsers) * 100}%`, minHeight: newUsersByDay[i] > 0 ? "3px" : "0" }} title={`Yeni istifadəçi: ${newUsersByDay[i]}`} />
+                  </div>
+                  <p className="text-[10px] text-mist">{label}</p>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex gap-4 mt-4 text-[11px] text-mist">
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-jade/60" /> Yeni istifadəçi</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gold/60" /> Satış həcmi (₼)</span>
+          </div>
         </div>
 
         <div>
