@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const supabase = createClient();
+      const supabase = createClient({ rememberMe });
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { setError(error.message); return; }
       router.push("/");
@@ -59,6 +60,13 @@ export default function LoginPage() {
               className="w-full rounded-lg border border-line bg-bg px-4 py-3 text-sm placeholder:text-mist focus:outline-none focus:ring-2 focus:ring-jade" />
             <input type="password" required placeholder="Şifrə" value={password} onChange={(e)=>setPassword(e.target.value)}
               className="w-full rounded-lg border border-line bg-bg px-4 py-3 text-sm placeholder:text-mist focus:outline-none focus:ring-2 focus:ring-jade" />
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <label className="flex items-center gap-2 cursor-pointer text-mist">
+              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 accent-jade" />
+              Məni xatırla
+            </label>
+            <Link href="/forgot-password" className="text-jade-soft underline underline-offset-4">Şifrəni unutdum</Link>
           </div>
           {error && <p className="text-sm text-gold bg-gold/10 border border-gold/30 rounded-lg px-3 py-2">{error}</p>}
           <button type="submit" disabled={loading} className="w-full rounded-full bg-jade text-bg font-semibold px-4 py-3 text-sm hover:bg-jade-soft transition disabled:opacity-50">
