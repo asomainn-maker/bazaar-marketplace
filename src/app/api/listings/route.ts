@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logToDiscord } from "@/lib/discord";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -74,6 +75,9 @@ export async function POST(req: NextRequest) {
       deliveryLines.map((content) => ({ listing_id: listing.id, content }))
     );
   }
+
+  const { data: sellerProfileForLog } = await admin.from("profiles").select("username").eq("id", user.id).maybeSingle();
+  await logToDiscord("listing", `🆕 @${sellerProfileForLog?.username ?? user.id} yeni elan yaratdı: **${listing.title}** — ${Number(listing.price).toFixed(2)} ₼${is_auto_delivery ? " (avtomatik təslimat)" : ""}`);
 
   return NextResponse.json({ listing });
 }

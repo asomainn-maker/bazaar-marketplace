@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { capturePaypalOrder } from "@/lib/paypal";
+import { logToDiscord } from "@/lib/discord";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token"); // PayPal order id
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const { status } = await capturePaypalOrder(token);
+    const { status, cardLast4 } = await capturePaypalOrder(token);
     if (status !== "COMPLETED") {
       await admin.from("deposits").update({ status: "failed" }).eq("id", deposit.id);
       return NextResponse.redirect(`${origin}/dashboard/wallet?error=not_completed`);
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest) {
 
     const { data: profile } = await admin
       .from("profiles")
-      .select("wallet_balance")
+      .select("wallet_balance, username")
       .eq("id", deposit.user_id)
       .maybeSingle();
 
@@ -55,7 +56,12 @@ export async function GET(req: NextRequest) {
       },
     ]);
 
-    await admin.from("deposits").update({ status: "completed" }).eq("id", deposit.id);
+    await admin.from("deposits").update({ status: "completed", card_last4: cardLast4 }).eq("id", deposit.id);
+
+    await logToDiscord(
+      "deposit",
+      `💳 @${profile?.username ?? deposit.user_id} PayPal ilə balans artırdı: ${Number(deposit.gross_amount).toFixed(2)} ₼ (net ${Number(deposit.net_amount).toFixed(2)} ₼)${cardLast4 ? ` — kart: **** ${cardLast4}` : ""}`
+    );
 
     return NextResponse.redirect(`${origin}/dashboard/wallet?success=1`);
   } catch {

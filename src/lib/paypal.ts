@@ -69,6 +69,7 @@ export async function capturePaypalOrder(orderId: string) {
   const grossValue = parseFloat(
     data.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value ?? "0"
   );
+  const cardLast4: string | null = data.payment_source?.card?.last_digits ?? null;
 
-  return { status, grossValue };
+  return { status, grossValue, cardLast4 };
 }

@@ -309,3 +309,43 @@ create table if not exists public.rate_limit_log (
   created_at timestamptz not null default now()
 );
 create index if not exists idx_rate_limit_lookup on public.rate_limit_log(user_id, action, created_at);
+
+-- Bir neçə elan şəkli
+create table if not exists public.listing_images (
+  id uuid primary key default gen_random_uuid(),
+  listing_id uuid not null references public.listings(id) on delete cascade,
+  url text not null,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+alter table public.listing_images enable row level security;
+create policy "Listing images publicly viewable" on public.listing_images for select using (true);
+
+-- Birbank (əl ilə təsdiqli) depozit tələbləri
+create table if not exists public.bank_deposit_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  amount numeric(12,2) not null,
+  note text,
+  status text not null default 'pending' check (status in ('pending','approved','rejected')),
+  admin_note text,
+  created_at timestamptz not null default now()
+);
+alter table public.bank_deposit_requests enable row level security;
+create policy "Users view own bank deposits" on public.bank_deposit_requests for select using (auth.uid() = user_id);
+create policy "Users request own bank deposit" on public.bank_deposit_requests for insert with check (auth.uid() = user_id);
+
+-- Kart son 4 rəqəmi (fırıldaqçılıq/hesab qurtarma sübutu üçün)
+alter table public.deposits add column if not exists card_last4 text;
+
+-- Email dəyişmə tarixçəsi (hesab qurtarma üçün)
+create table if not exists public.email_change_log (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  old_email text,
+  new_email text not null,
+  changed_by uuid references auth.users(id),
+  created_at timestamptz not null default now()
+);
+alter table public.email_change_log enable row level security;
+create policy "Only admins manage via service role" on public.email_change_log for select using (false);

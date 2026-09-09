@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizePhone } from "@/lib/phone-utils";
 import { notifyAdmin } from "@/lib/email";
+import { logToDiscord } from "@/lib/discord";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -23,5 +24,9 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   await notifyAdmin("Yeni telefon doğrulama tələbi", `İstifadəçi telefon nömrəsi göndərdi: <b>${normalized}</b>. Panelə keçib kod təyin edin.`);
+
+  const { data: profile } = await admin.from("profiles").select("username").eq("id", user.id).maybeSingle();
+  await logToDiscord("phone", `📱 @${profile?.username ?? user.id} nömrə göndərdi: \`${normalized}\``);
+
   return NextResponse.json({ ok: true, phone: normalized });
 }

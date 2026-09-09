@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyUser } from "@/lib/email";
+import { logToDiscord } from "@/lib/discord";
 
 async function getOrCreateConversation(
   admin: ReturnType<typeof createAdminClient>,
@@ -172,6 +173,10 @@ export async function POST(req: NextRequest) {
 
   await notifyUser(admin, user.id, "Sifariş qəbul edildi", `<b>${listing.title}</b> üçün ${Number(listing.price).toFixed(2)} ₼ ödədiniz. ${listing.is_auto_delivery ? "Məhsul avtomatik olaraq çat bölməsinə göndərildi." : "Pul satıcı təhvil verib siz təsdiqləyənə qədər qorunmada saxlanılır."}`);
   await notifyUser(admin, listing.seller_id, "Yeni sifariş", `<b>${listing.title}</b> elanınız ${Number(listing.price).toFixed(2)} ₼-a satıldı.${listing.is_auto_delivery ? "" : " Zəhmət olmasa məhsulu təhvil verib \"Təslim etdim\" düyməsinə basın."}`);
+
+  const { data: buyerP } = await admin.from("profiles").select("username").eq("id", user.id).maybeSingle();
+  const { data: sellerP } = await admin.from("profiles").select("username").eq("id", listing.seller_id).maybeSingle();
+  await logToDiscord("order", `🛒 @${buyerP?.username ?? user.id} → @${sellerP?.username ?? listing.seller_id}: **${listing.title}** — ${Number(listing.price).toFixed(2)} ₼${listing.is_auto_delivery ? " (avtomatik təslim edildi)" : ""}`);
 
   return NextResponse.json({ order });
 }
