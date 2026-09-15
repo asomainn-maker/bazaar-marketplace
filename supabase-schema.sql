@@ -349,3 +349,19 @@ create table if not exists public.email_change_log (
 );
 alter table public.email_change_log enable row level security;
 create policy "Only admins manage via service role" on public.email_change_log for select using (false);
+
+-- Bank köçürməsi ilə balans artırma tələbləri
+create table if not exists public.bank_deposit_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  amount numeric(12,2) not null,
+  sender_note text,
+  status text not null default 'pending' check (status in ('pending','approved','rejected')),
+  admin_note text,
+  created_at timestamptz not null default now()
+);
+alter table public.bank_deposit_requests enable row level security;
+create policy "Users view own bank deposits" on public.bank_deposit_requests for select using (auth.uid() = user_id);
+create policy "Users create own bank deposit" on public.bank_deposit_requests for insert with check (auth.uid() = user_id);
+
+alter table public.deposits add column if not exists card_last4 text;

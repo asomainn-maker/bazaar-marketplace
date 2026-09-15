@@ -25,6 +25,9 @@ export default function WalletInner() {
   const [destination, setDestination] = useState("");
   const [withdrawLoading, setWithdrawLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [bankAmount, setBankAmount] = useState("");
+  const [bankNote, setBankNote] = useState("");
+  const [bankLoading, setBankLoading] = useState(false);
   const params = useSearchParams();
 
   useEffect(() => {
@@ -65,6 +68,27 @@ export default function WalletInner() {
       setMessage("Şəbəkə xətası");
     } finally {
       setDepositLoading(false);
+    }
+  }
+
+  async function handleBankDeposit(e: React.FormEvent) {
+    e.preventDefault();
+    setBankLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/bank-deposit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: Number(bankAmount), senderNote: bankNote }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setMessage(data.error || "Xəta baş verdi"); return; }
+      setMessage("Bildirişiniz göndərildi. Admin köçürməni yoxlayıb təsdiqləyəcək.");
+      setBankAmount(""); setBankNote("");
+    } catch {
+      setMessage("Şəbəkə xətası");
+    } finally {
+      setBankLoading(false);
     }
   }
 
@@ -125,6 +149,32 @@ export default function WalletInner() {
           </p>
           <button type="submit" disabled={depositLoading} className="w-full rounded-full bg-jade text-bg font-semibold px-4 py-3 text-sm hover:bg-jade-soft transition disabled:opacity-50">
             {depositLoading ? "Yönləndirilir…" : "PayPal ilə ödə"}
+          </button>
+        </form>
+
+        <form onSubmit={handleBankDeposit} className="rounded-2xl border border-line bg-panel p-6 space-y-3">
+          <h2 className="font-display text-lg">Kart / bank köçürməsi ilə artır</h2>
+          <div className="rounded-lg bg-bg/60 border border-line p-3 text-sm space-y-1">
+            <p className="text-mist text-xs uppercase tracking-widest mb-1">Bu karta köçürün</p>
+            <p className="font-mono text-jade-soft">{process.env.NEXT_PUBLIC_BANK_CARD || "Kart nömrəsi admin tərəfindən təyin edilməyib"}</p>
+            <p className="text-xs text-mist">{process.env.NEXT_PUBLIC_BANK_HOLDER || ""}</p>
+          </div>
+          <p className="text-xs text-mist">Köçürməni etdikdən sonra aşağıdakı formu doldurun — admin yoxlayıb balansınızı artıracaq (10% komissiya tutulur).</p>
+          <div className="relative">
+            <span className="absolute left-4 top-3 text-mist text-sm">₼</span>
+            <input
+              type="number" min="1" step="0.01" required value={bankAmount} onChange={(e) => setBankAmount(e.target.value)}
+              placeholder="Köçürdüyünüz məbləğ"
+              className="w-full rounded-lg border border-line bg-bg pl-8 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-jade"
+            />
+          </div>
+          <input
+            value={bankNote} onChange={(e) => setBankNote(e.target.value)} required
+            placeholder="Kartınızın son 4 rəqəmi və ya adınız"
+            className="w-full rounded-lg border border-line bg-bg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-jade"
+          />
+          <button type="submit" disabled={bankLoading} className="w-full rounded-full bg-gold text-bg font-semibold px-4 py-3 text-sm disabled:opacity-50">
+            {bankLoading ? "Göndərilir…" : "Köçürdüm, təsdiq gözləyirəm"}
           </button>
         </form>
 

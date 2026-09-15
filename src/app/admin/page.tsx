@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import WithdrawalActions from "./withdrawal-actions";
 import PhoneVerificationActions from "./phone-verification-actions";
+import BankDepositActions from "./bank-deposit-actions";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -64,6 +65,19 @@ export default async function AdminPage() {
     .select("*", { count: "exact", head: true })
     .in("status", ["paid", "delivered", "disputed"]);
 
+  const { data: bankDeposits } = await admin
+    .from("bank_deposit_requests")
+    .select("id, amount, sender_note, created_at, user_id")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+
+  const bankUserIds = [...new Set((bankDeposits ?? []).map((b) => b.user_id))];
+  let bankNames: Record<string, string> = {};
+  if (bankUserIds.length > 0) {
+    const { data: bp } = await admin.from("profiles").select("id, username").in("id", bankUserIds);
+    bankNames = Object.fromEntries((bp ?? []).map((p) => [p.id, p.username]));
+  }
+
   const { count: openReportsCount } = await admin
     .from("listing_reports")
     .select("*", { count: "exact", head: true })
@@ -123,6 +137,25 @@ export default async function AdminPage() {
           <div className="flex gap-4 mt-4 text-[11px] text-mist">
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-jade/60" /> Yeni istifadəçi</span>
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gold/60" /> Satış həcmi (₼)</span>
+          </div>
+        </div>
+
+        <div>
+          <h1 className="font-display text-2xl mb-5">Bank köçürmələri</h1>
+          <div className="space-y-3">
+            {(!bankDeposits || bankDeposits.length === 0) && <p className="text-sm text-mist">Gözləyən köçürmə yoxdur.</p>}
+            {(bankDeposits ?? []).map((b) => (
+              <div key={b.id} className="rounded-xl border border-line bg-panel p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="font-medium">@{bankNames[b.user_id] ?? "istifadəçi"}</p>
+                    <p className="text-xs text-mist">{b.sender_note}</p>
+                  </div>
+                  <span className="font-mono text-gold">{Number(b.amount).toFixed(2)} ₼</span>
+                </div>
+                <BankDepositActions requestId={b.id} />
+              </div>
+            ))}
           </div>
         </div>
 
