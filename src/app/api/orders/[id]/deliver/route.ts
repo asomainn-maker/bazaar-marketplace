@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyUser } from "@/lib/email";
+import { logToDiscord } from "@/lib/discord";
 
 const AUTO_RELEASE_DAYS = 3;
 
@@ -41,6 +42,8 @@ export async function POST(
 
   const title = (order.listings as unknown as { title: string } | null)?.title ?? "Sifariş";
   await notifyUser(admin, order.buyer_id, "Məhsul təslim edildi", `Satıcı <b>${title}</b> üçün məhsulu təslim etdiyini bildirdi. Zəhmət olmasa yoxlayıb təsdiqləyin.`);
+
+  await logToDiscord("order", `📦 Sifariş təhvil verildi: **${title}** (#${id.slice(0, 8)})`);
 
   return NextResponse.json({ ok: true, auto_release_at: autoRelease.toISOString() });
 }

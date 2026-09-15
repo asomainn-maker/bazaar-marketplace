@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logToDiscord } from "@/lib/discord";
 
 export async function POST(
   req: NextRequest,
@@ -37,6 +38,8 @@ export async function POST(
     { user_id: id, type: "withdrawal", amount: -numericAmount, note: `Admin köçürməsi: @${toUsername.trim()}-a` },
     { user_id: toProfile.id, type: "deposit", amount: numericAmount, note: "Admin köçürməsi" },
   ]);
+
+  await logToDiscord("transfer", `💸 Admin köçürməsi: ${numericAmount.toFixed(2)} ₼ → @${toUsername.trim()}`);
 
   return NextResponse.json({ ok: true });
 }

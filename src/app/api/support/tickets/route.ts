@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyAdmin } from "@/lib/email";
+import { logToDiscord } from "@/lib/discord";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function GET() {
@@ -89,6 +90,8 @@ export async function POST(req: NextRequest) {
     `Yeni dəstək müraciəti: ${CATEGORY_LABELS[category]}`,
     `${message.trim().slice(0, 200)}`
   );
+
+  await logToDiscord("dispute", `🎫 Yeni müraciət (${category}): ${message.trim().slice(0,150)}`);
 
   return NextResponse.json({ ticketId: ticket.id });
 }

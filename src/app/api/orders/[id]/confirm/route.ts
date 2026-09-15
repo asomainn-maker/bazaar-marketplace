@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyUser } from "@/lib/email";
+import { logToDiscord } from "@/lib/discord";
 
 export async function POST(
   _req: NextRequest,
@@ -53,6 +54,8 @@ export async function POST(
 
   const title = (order.listings as unknown as { title: string } | null)?.title ?? "Sifariş";
   await notifyUser(admin, order.seller_id, "Ödəniş balansınıza keçdi", `<b>${title}</b> üçün ${Number(order.amount).toFixed(2)} ₼ balansınıza əlavə olundu.`);
+
+  await logToDiscord("order", `✅ Sifariş tamamlandı: **${title}** — ${Number(order.amount).toFixed(2)} ₼ satıcıya keçdi.`);
 
   return NextResponse.json({ ok: true });
 }

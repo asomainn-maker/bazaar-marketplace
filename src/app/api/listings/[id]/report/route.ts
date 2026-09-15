@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyAdmin } from "@/lib/email";
+import { logToDiscord } from "@/lib/discord";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(
@@ -34,6 +35,8 @@ export async function POST(
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   await notifyAdmin("Elan report edildi", `"<b>${listing.title}</b>" elanı report edildi. Səbəb: ${reason.trim()}`);
+
+  await logToDiscord("dispute", `🚩 Elan report edildi: "${listing.title}" — ${reason.trim()}`);
 
   return NextResponse.json({ ok: true });
 }

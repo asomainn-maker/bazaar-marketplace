@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logToDiscord } from "@/lib/discord";
 
 export async function POST(
   req: NextRequest,
@@ -44,6 +45,8 @@ export async function POST(
     .from("withdrawals")
     .update({ status: action, admin_note: note ?? null })
     .eq("id", id);
+
+  await logToDiscord("withdrawal", `${action === "paid" ? "✅ Ödənildi" : "❌ Rədd edildi"}: ${Number(withdrawal.amount).toFixed(2)} ₼`);
 
   return NextResponse.json({ ok: true });
 }
