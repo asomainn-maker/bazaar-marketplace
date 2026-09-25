@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
             <h1 className="font-display text-2xl mb-2">Kodu daxil edin</h1>
             <p className="text-sm text-mist mb-4"><span className="font-mono text-paper">{email}</span> ünvanına göndərilən kodu yazın.</p>
             <input
-              value={code} onChange={(e) => setCode(e.target.value)} required placeholder="123456" maxLength={6}
+              value={code} onChange={(e) => setCode(e.target.value)} required placeholder="Kodu yazın"
               className="w-full rounded-lg border border-line bg-bg px-4 py-3 text-sm tracking-[0.3em] text-center focus:outline-none focus:ring-2 focus:ring-jade"
             />
             {error && <p className="text-sm text-gold bg-gold/10 border border-gold/30 rounded-lg px-3 py-2">{error}</p>}
