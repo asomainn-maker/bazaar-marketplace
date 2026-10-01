@@ -20,6 +20,7 @@ export default function LoginPage() {
       const supabase = createClient({ rememberMe });
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { setError(error.message); return; }
+      fetch("/api/auth/login-alert", { method: "POST" }).catch(() => {});
       router.push("/");
       router.refresh();
     } catch {
