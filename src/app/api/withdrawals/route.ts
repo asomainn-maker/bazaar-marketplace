@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   const { data: withdrawal, error } = await admin
     .from("withdrawals")
-    .insert({ user_id: user.id, amount: numericAmount, destination: destination.trim() })
+    .insert({ user_id: user.id, amount: numericAmount, net_amount: Math.round(numericAmount * 0.9 * 100) / 100, destination: destination.trim() })
     .select("id, amount, status, created_at")
     .single();
 
@@ -54,6 +54,6 @@ export async function POST(req: NextRequest) {
   });
 
   await notifyAdmin("Yeni çıxarış tələbi", `@${user.email} ${numericAmount.toFixed(2)} ₼ çıxarış tələb etdi (${destination.trim()}). Panelə keçib təsdiqləyin.`);
-  await logToDiscord("withdrawal", `💰 Çıxarış tələbi: ${numericAmount.toFixed(2)} ₼ → ${destination.trim()}`);
+  await logToDiscord("withdrawal", `💰 Çıxarış tələbi: ${numericAmount.toFixed(2)} ₼ (net ${(numericAmount * 0.9).toFixed(2)} ₼) → kart: ${destination.trim()}`);
   return NextResponse.json({ withdrawal });
 }

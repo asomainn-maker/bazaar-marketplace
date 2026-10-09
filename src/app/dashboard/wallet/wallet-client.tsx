@@ -28,9 +28,15 @@ export default function WalletInner() {
   const [bankAmount, setBankAmount] = useState("");
   const [bankNote, setBankNote] = useState("");
   const [bankLoading, setBankLoading] = useState(false);
+  const [bankCard, setBankCard] = useState("");
+  const [bankHolder, setBankHolder] = useState("");
   const params = useSearchParams();
 
   useEffect(() => {
+    fetch("/api/settings").then((r) => r.json()).then((d) => {
+      setBankCard(d.bank_card ?? "");
+      setBankHolder(d.bank_holder ?? "");
+    });
     const supabase = createClient();
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -156,8 +162,8 @@ export default function WalletInner() {
           <h2 className="font-display text-lg">Kart / bank köçürməsi ilə artır</h2>
           <div className="rounded-lg bg-bg/60 border border-line p-3 text-sm space-y-1">
             <p className="text-mist text-xs uppercase tracking-widest mb-1">Bu karta köçürün</p>
-            <p className="font-mono text-jade-soft">{process.env.NEXT_PUBLIC_BANK_CARD || "Kart nömrəsi admin tərəfindən təyin edilməyib"}</p>
-            <p className="text-xs text-mist">{process.env.NEXT_PUBLIC_BANK_HOLDER || ""}</p>
+            <p className="font-mono text-jade-soft">{bankCard || "Kart nömrəsi admin tərəfindən təyin edilməyib"}</p>
+            <p className="text-xs text-mist">{bankHolder}</p>
           </div>
           <p className="text-xs text-mist">Köçürməni etdikdən sonra aşağıdakı formu doldurun — admin yoxlayıb balansınızı artıracaq (10% komissiya tutulur).</p>
           <div className="relative">
@@ -180,6 +186,7 @@ export default function WalletInner() {
 
         <form onSubmit={handleWithdraw} className="rounded-2xl border border-line bg-panel p-6 space-y-3">
           <h2 className="font-display text-lg">Çıxarış tələb et</h2>
+          <p className="text-xs text-mist">10% komissiya tutulur. {withdrawAmount && !isNaN(Number(withdrawAmount)) ? `Alacağınız: ${(Number(withdrawAmount) * 0.9).toFixed(2)} ₼` : ""}</p>
           <div className="relative">
             <span className="absolute left-4 top-3 text-mist text-sm">₼</span>
             <input
@@ -189,7 +196,7 @@ export default function WalletInner() {
             />
           </div>
           <input
-            value={destination} onChange={(e) => setDestination(e.target.value)} required placeholder="PayPal email / IBAN"
+            value={destination} onChange={(e) => setDestination(e.target.value)} required placeholder="Kart nömrəsi (məs. 4169 XXXX XXXX XXXX)"
             className="w-full rounded-lg border border-line bg-bg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-jade"
           />
           <button type="submit" disabled={withdrawLoading} className="w-full rounded-full border border-line px-4 py-3 text-sm hover:border-jade transition disabled:opacity-50">

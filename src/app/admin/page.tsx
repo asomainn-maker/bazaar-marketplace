@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import WithdrawalActions from "./withdrawal-actions";
 import PhoneVerificationActions from "./phone-verification-actions";
 import BankDepositActions from "./bank-deposit-actions";
+import SiteSettingsForm from "./site-settings-form";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -25,7 +26,7 @@ export default async function AdminPage() {
 
   const { data: withdrawals } = await admin
     .from("withdrawals")
-    .select("id, amount, destination, status, created_at, user_id")
+    .select("id, amount, net_amount, destination, status, created_at, user_id")
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 
@@ -77,6 +78,9 @@ export default async function AdminPage() {
     const { data: bp } = await admin.from("profiles").select("id, username").in("id", bankUserIds);
     bankNames = Object.fromEntries((bp ?? []).map((p) => [p.id, p.username]));
   }
+
+  const { data: settingsRows } = await admin.from("site_settings").select("key, value");
+  const settingsMap = Object.fromEntries((settingsRows ?? []).map((s) => [s.key, s.value]));
 
   const { count: openReportsCount } = await admin
     .from("listing_reports")
@@ -138,6 +142,11 @@ export default async function AdminPage() {
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-jade/60" /> Yeni istifadəçi</span>
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gold/60" /> Satış həcmi (₼)</span>
           </div>
+        </div>
+
+        <div className="rounded-2xl border border-line bg-panel p-6">
+          <p className="text-xs uppercase tracking-widest text-mist mb-3">Bank köçürmə məlumatları (istifadəçilərə göstərilir)</p>
+          <SiteSettingsForm initialCard={settingsMap.bank_card ?? ""} initialHolder={settingsMap.bank_holder ?? ""} />
         </div>
 
         <div>
@@ -227,7 +236,7 @@ export default async function AdminPage() {
               <div key={w.id} className="rounded-xl border border-line bg-panel p-4">
                 <div className="flex items-center justify-between mb-1">
                   <p className="font-medium">@{names[w.user_id] ?? "istifadəçi"}</p>
-                  <span className="font-mono text-gold">{Number(w.amount).toFixed(2)} ₼</span>
+                  <span className="font-mono text-gold">{Number(w.net_amount ?? Number(w.amount) * 0.9).toFixed(2)} ₼ <span className="text-[10px] text-mist">(göndər)</span></span>
                 </div>
                 <p className="text-xs text-mist mb-3">{w.destination}</p>
                 <WithdrawalActions id={w.id} />

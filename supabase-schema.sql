@@ -365,3 +365,20 @@ create policy "Users view own bank deposits" on public.bank_deposit_requests for
 create policy "Users create own bank deposit" on public.bank_deposit_requests for insert with check (auth.uid() = user_id);
 
 alter table public.deposits add column if not exists card_last4 text;
+
+-- Sayt ayarları (admin dəyişə bilən, məs. bank kart nömrəsi)
+create table if not exists public.site_settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.site_settings enable row level security;
+create policy "Settings publicly viewable" on public.site_settings for select using (true);
+
+insert into public.site_settings (key, value) values
+  ('bank_card', '4169-7388-0383-8246'),
+  ('bank_holder', 'İtemBazar')
+on conflict (key) do nothing;
+
+-- Çıxarışda komissiya göstəricisi
+alter table public.withdrawals add column if not exists net_amount numeric(12,2);
