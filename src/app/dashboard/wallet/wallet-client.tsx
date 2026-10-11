@@ -143,6 +143,16 @@ export default function WalletInner() {
 
         <form onSubmit={handleDeposit} className="rounded-2xl border border-line bg-panel p-6 space-y-3">
           <h2 className="font-display text-lg">Balans artır (PayPal)</h2>
+          <div className="flex flex-wrap gap-2">
+            {[1, 5, 10, 20, 50].map((v) => (
+              <button
+                key={v} type="button" onClick={() => setDepositAmount(String(v))}
+                className={`rounded-full border px-4 py-1.5 text-xs transition-colors ${depositAmount === String(v) ? "border-jade text-jade" : "border-line text-mist hover:border-jade"}`}
+              >
+                {v} ₼
+              </button>
+            ))}
+          </div>
           <div className="relative">
             <span className="absolute left-4 top-3 text-mist text-sm">₼</span>
             <input
