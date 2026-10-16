@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SupportChatWidget from "./support-chat-widget";
+import AuthCodeHandler from "./auth-code-handler";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://itembazar.online"),
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="az" className="h-full antialiased">
       <body className="min-h-full">
         {children}
+        <AuthCodeHandler />
         <SupportChatWidget />
       </body>
     </html>

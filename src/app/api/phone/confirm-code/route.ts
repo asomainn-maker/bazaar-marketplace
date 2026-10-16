@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient();
   const { data: profile } = await admin
     .from("profiles")
-    .select("phone_verification_code")
+    .select("phone, phone_verification_code")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -27,6 +27,18 @@ export async function POST(req: NextRequest) {
     .from("profiles")
     .update({ phone_verified: true, phone_verification_code: null })
     .eq("id", user.id);
+
+  // Supabase Authentication → Users cədvəlindəki "Phone" sütununa da yaz.
+  try {
+    if (profile?.phone) {
+      await admin.auth.admin.updateUserById(user.id, {
+        phone: profile.phone.replace(/^\+/, ""),
+        phone_confirm: true,
+      });
+    }
+  } catch {
+    // sinxronizasiya alınmasa da təsdiq qüvvədə qalır
+  }
 
   return NextResponse.json({ ok: true });
 }
