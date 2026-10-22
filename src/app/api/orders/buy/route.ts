@@ -13,9 +13,9 @@ async function getOrCreateConversation(
   const { data: existing } = await admin
     .from("conversations")
     .select("id")
-    .eq("buyer_id", buyerId)
-    .eq("seller_id", sellerId)
     .eq("listing_id", listingId)
+    .or(`and(buyer_id.eq.${buyerId},seller_id.eq.${sellerId}),and(buyer_id.eq.${sellerId},seller_id.eq.${buyerId})`)
+    .limit(1)
     .maybeSingle();
   if (existing) return existing.id;
 
@@ -93,29 +93,6 @@ export async function POST(req: NextRequest) {
     deliveryItemId = item.id;
     deliveryContent = item.content;
 
-    // Stokda başqa element qalıbmı yoxla.
-    const { count: remaining } = await admin
-      .from("listing_delivery_items")
-      .select("*", { count: "exact", head: true })
-      .eq("listing_id", listing_id)
-      .eq("delivered", false);
-
-    if ((remaining ?? 0) === 0) {
-      await admin.from("listings").update({ status: "sold" }).eq("id", listing_id);
-    }
-  } else {
-    // Tək-satışlı elan: dərhal kilidlə.
-    const { data: lockedListing } = await admin
-      .from("listings")
-      .update({ status: "sold" })
-      .eq("id", listing_id)
-      .eq("status", "active")
-      .select("id")
-      .maybeSingle();
-
-    if (!lockedListing) {
-      return NextResponse.json({ error: "Elan artıq başqası tərəfindən alınıb" }, { status: 400 });
-    }
   }
 
   const now = new Date();

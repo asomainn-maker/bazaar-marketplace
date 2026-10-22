@@ -107,6 +107,15 @@ export default async function Home({
   if (min) baseParams.set("min", min);
   if (max) baseParams.set("max", max);
 
+  const autoIds = (listings ?? []).filter((l) => l.is_auto_delivery).map((l) => l.id);
+  const stockMap: Record<string, number> = {};
+  if (autoIds.length > 0) {
+    autoIds.forEach((id) => { stockMap[id] = 0; });
+    const { data: stockRows } = await admin
+      .from("listing_delivery_items").select("listing_id").eq("delivered", false).in("listing_id", autoIds);
+    (stockRows ?? []).forEach((r) => { stockMap[r.listing_id] = (stockMap[r.listing_id] ?? 0) + 1; });
+  }
+
   const sellerIds = [...new Set((listings ?? []).map((l) => l.seller_id))];
   let sellerNames: Record<string, string> = {};
   if (sellerIds.length > 0) {
@@ -188,7 +197,7 @@ export default async function Home({
             <Link
               key={l.id}
               href={`/listings/${l.id}`}
-              className="rounded-2xl border border-line bg-panel overflow-hidden hover:border-jade transition-colors group"
+              className="rounded-2xl border border-line bg-panel overflow-hidden hover:border-jade card-lift group animate-fade-up"
             >
               <div className="aspect-[4/3] bg-bg overflow-hidden">
                 {l.image_url ? (
@@ -204,7 +213,7 @@ export default async function Home({
                   <p className="text-[10px] uppercase tracking-widest text-mist">
                     {(l.categories as unknown as { name: string } | null)?.name ?? "Digər"}
                   </p>
-                  {l.is_auto_delivery && <span className="text-[10px] text-jade">⚡ Avtomatik</span>}
+                  {l.is_auto_delivery && (stockMap[l.id] === 0 ? <span className="text-[10px] text-gold">Stok bitib</span> : <span className="text-[10px] text-jade">⚡ Avtomatik</span>)}
                 </div>
                 <p className="font-display text-base mb-1 truncate">{l.title}</p>
                 <p className="text-xs text-mist mb-3">@{sellerNames[l.seller_id] ?? "satıcı"}</p>

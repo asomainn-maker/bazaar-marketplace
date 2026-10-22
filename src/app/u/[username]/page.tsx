@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import MessageUserButton from "../../message-user-button";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -54,6 +56,9 @@ export default async function ProfilePage({
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : null;
 
+  const supabaseViewer = await createClient();
+  const { data: { user: viewer } } = await supabaseViewer.auth.getUser();
+
   const level = levelInfo(completedSales ?? 0);
   const memberSince = new Date(profile.created_at).toLocaleDateString("az", { year: "numeric", month: "long" });
 
@@ -83,6 +88,9 @@ export default async function ProfilePage({
               </div>
               <p className={`text-sm font-medium ${level.color}`}>{level.label}</p>
               <p className="text-xs text-mist mt-1">Üzvlük: {memberSince}</p>
+              {viewer && viewer.id !== profile.id && (
+                <div className="mt-3"><MessageUserButton otherUserId={profile.id} label="💬 Mesaj yaz" /></div>
+              )}
             </div>
           </div>
 

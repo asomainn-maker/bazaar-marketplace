@@ -121,7 +121,7 @@ export default async function DashboardPage() {
             <div key={l.id} className="rounded-xl border border-line bg-panel p-4 flex items-center justify-between">
               <div>
                 <p className="font-medium">{l.title}</p>
-                <p className="text-xs text-mist">{l.status === "active" ? "Aktiv" : "Satılıb"}</p>
+                <p className="text-xs text-mist">{l.status === "active" ? "Vitrində aktiv" : "Qaldırılıb"}</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className="font-mono text-jade-soft">{Number(l.price).toFixed(2)} ₼</span>

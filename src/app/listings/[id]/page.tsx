@@ -4,7 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import BuyButton from "./buy-button";
 import ListingTabs from "./listing-tabs";
-import MessageSellerButton from "./message-seller-button";
+import MessageUserButton from "../../message-user-button";
+import ShareButton from "../../share-button";
 import ReportListingButton from "./report-listing-button";
 
 export const dynamic = "force-dynamic";
@@ -144,11 +145,14 @@ export default async function ListingPage({
 
           <div className="flex items-center justify-between border-t border-line pt-6">
             <span className="font-mono text-2xl text-jade-soft">{Number(listing.price).toFixed(2)} ₼</span>
-            <div className="flex items-center gap-2">
-              {!isOwnListing && user && <MessageSellerButton sellerId={listing.seller_id} listingId={listing.id} />}
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              <ShareButton path={`/listings/${listing.id}`} title={listing.title} />
+              {!isOwnListing && user && <MessageUserButton otherUserId={listing.seller_id} listingId={listing.id} label="💬 Satıcıya yaz" />}
               {!isOwnListing && user && <ReportListingButton listingId={listing.id} />}
               {listing.status !== "active" ? (
-                <span className="text-sm text-mist">Bu elan artıq satılıb</span>
+                <span className="text-sm text-mist">Bu elan satıcı tərəfindən qaldırılıb</span>
+              ) : stockCount === 0 ? (
+                <span className="text-sm text-gold">Stok bitib</span>
               ) : isOwnListing ? (
                 <span className="text-sm text-mist">Bu sizin elanınızdır</span>
               ) : user ? (

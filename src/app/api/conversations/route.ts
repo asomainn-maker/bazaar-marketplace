@@ -59,9 +59,11 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Giriş tələb olunur" }, { status: 401 });
 
-  const { sellerId, listingId } = await req.json();
-  if (!sellerId) return NextResponse.json({ error: "sellerId tələb olunur" }, { status: 400 });
-  if (sellerId === user.id) return NextResponse.json({ error: "Özünüzə mesaj yaza bilməzsiniz" }, { status: 400 });
+  const body = await req.json();
+  const otherId: string | undefined = body.otherUserId ?? body.sellerId;
+  const listingId: string | null = body.listingId ?? null;
+  if (!otherId) return NextResponse.json({ error: "İstifadəçi tələb olunur" }, { status: 400 });
+  if (otherId === user.id) return NextResponse.json({ error: "Özünüzə mesaj yaza bilməzsiniz" }, { status: 400 });
 
   const admin = createAdminClient();
 
@@ -69,19 +71,19 @@ export async function POST(req: NextRequest) {
   if (senderProfile?.can_message === false) {
     return NextResponse.json({ error: "Admin sizin mesaj yazma icazənizi bloklayıb" }, { status: 403 });
   }
-  const { data: existing } = await admin
+
+  // Mövcud söhbət (hər iki istiqamətdə) varsa onu qaytar.
+  let q = admin
     .from("conversations")
     .select("id")
-    .eq("buyer_id", user.id)
-    .eq("seller_id", sellerId)
-    .eq("listing_id", listingId ?? null)
-    .maybeSingle();
-
+    .or(`and(buyer_id.eq.${user.id},seller_id.eq.${otherId}),and(buyer_id.eq.${otherId},seller_id.eq.${user.id})`);
+  q = listingId ? q.eq("listing_id", listingId) : q.is("listing_id", null);
+  const { data: existing } = await q.limit(1).maybeSingle();
   if (existing) return NextResponse.json({ conversationId: existing.id });
 
   const { data: created, error } = await admin
     .from("conversations")
-    .insert({ buyer_id: user.id, seller_id: sellerId, listing_id: listingId ?? null })
+    .insert({ buyer_id: user.id, seller_id: otherId, listing_id: listingId })
     .select("id")
     .single();
 

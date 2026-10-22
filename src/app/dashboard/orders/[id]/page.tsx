@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import OrderActions from "./order-actions";
+import MessageUserButton from "../../../message-user-button";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -20,7 +21,7 @@ export default async function OrderPage({
   const admin = createAdminClient();
   const { data: order } = await admin
     .from("orders")
-    .select("id, buyer_id, seller_id, amount, status, delivered_at, auto_release_at, listings(title)")
+    .select("id, buyer_id, seller_id, listing_id, amount, status, delivered_at, auto_release_at, listings(title)")
     .eq("id", id)
     .maybeSingle();
 
@@ -52,6 +53,10 @@ export default async function OrderPage({
             {(order.listings as unknown as { title: string } | null)?.title}
           </h1>
           <p className="font-mono text-jade-soft text-lg mb-6">{Number(order.amount).toFixed(2)} ₼</p>
+
+          <div className="mb-4">
+            <MessageUserButton otherUserId={isBuyer ? order.seller_id : order.buyer_id} listingId={order.listing_id} label={isBuyer ? "💬 Satıcıya yaz" : "💬 Alıcıya yaz"} />
+          </div>
 
           <OrderActions
             orderId={order.id}
