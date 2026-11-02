@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Giriş tələb olunur" }, { status: 401 });
 
-  const { title, description, price, category_id, image_url, is_auto_delivery, delivery_content } = await req.json();
+  const { title, description, price, category_id, image_url, is_auto_delivery, delivery_content, image_urls } = await req.json();
   if (typeof title !== "string" || !title.trim() || title.trim().length > 120) {
     return NextResponse.json({ error: "Başlıq 1-120 simvol olmalıdır" }, { status: 400 });
   }
@@ -73,6 +73,12 @@ export async function POST(req: NextRequest) {
   if (is_auto_delivery && deliveryLines.length > 0) {
     await admin.from("listing_delivery_items").insert(
       deliveryLines.map((content) => ({ listing_id: listing.id, content }))
+    );
+  }
+
+  if (Array.isArray(image_urls) && image_urls.length > 0) {
+    await admin.from("listing_images").insert(
+      image_urls.slice(0, 5).map((url: string, i: number) => ({ listing_id: listing.id, url, sort_order: i }))
     );
   }
 

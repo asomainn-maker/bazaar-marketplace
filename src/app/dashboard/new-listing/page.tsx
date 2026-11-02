@@ -15,8 +15,8 @@ export default function NewListingPage() {
   const [categoryId, setCategoryId] = useState("");
   const [isAutoDelivery, setIsAutoDelivery] = useState(false);
   const [deliveryContent, setDeliveryContent] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -35,10 +35,10 @@ export default function NewListingPage() {
     setError(null);
     setLoading(true);
     try {
-      let image_url: string | null = null;
-      if (imageFile) {
+      const image_urls: string[] = [];
+      for (const file of imageFiles) {
         const imgForm = new FormData();
-        imgForm.append("file", imageFile);
+        imgForm.append("file", file);
         const imgRes = await fetch("/api/listings/image", { method: "POST", body: imgForm });
         const imgData = await imgRes.json();
         if (!imgRes.ok) {
@@ -46,13 +46,14 @@ export default function NewListingPage() {
           setLoading(false);
           return;
         }
-        image_url = imgData.url;
+        image_urls.push(imgData.url);
       }
+      const image_url = image_urls[0] ?? null;
       const res = await fetch("/api/listings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title, description, price, category_id: categoryId || null, image_url,
+          title, description, price, category_id: categoryId || null, image_url, image_urls,
           is_auto_delivery: isAutoDelivery,
           delivery_content: isAutoDelivery ? deliveryContent : undefined,
         }),
@@ -85,24 +86,40 @@ export default function NewListingPage() {
         <h1 className="font-display text-2xl mb-8">Satılığa çıxarın</h1>
 
         <form onSubmit={handleSubmit} className="rounded-2xl border border-line bg-panel p-6 space-y-4">
-          <label className="block">
-            <span className="text-xs text-mist mb-2 block">Şəkil (istəyə bağlı, tövsiyə olunur)</span>
-            <div className="rounded-xl border-2 border-dashed border-line hover:border-jade transition-colors overflow-hidden">
-              {imagePreview ? (
-                <img src={imagePreview} alt="" className="w-full h-48 object-cover" />
-              ) : (
-                <div className="h-32 flex items-center justify-center text-mist text-sm">Şəkil seçmək üçün klikləyin</div>
+          <div>
+            <span className="text-xs text-mist mb-2 block">Şəkillər (maksimum 5, birincisi əsas şəkil olacaq)</span>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              {imagePreviews.map((src, i) => (
+                <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-line">
+                  <img src={src} alt="" className="w-full h-full object-cover" />
+                  {i === 0 && <span className="absolute left-1 top-1 rounded bg-jade text-bg text-[9px] px-1.5 py-0.5 font-semibold">Əsas</span>}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageFiles((prev) => prev.filter((_, idx) => idx !== i));
+                      setImagePreviews((prev) => prev.filter((_, idx) => idx !== i));
+                    }}
+                    className="absolute right-1 top-1 rounded-full bg-bg/80 text-paper text-xs w-5 h-5 leading-5 text-center"
+                    aria-label="Şəkli sil"
+                  >×</button>
+                </div>
+              ))}
+              {imageFiles.length < 5 && (
+                <label className="aspect-square rounded-lg border-2 border-dashed border-line hover:border-jade transition-colors flex items-center justify-center text-mist text-2xl cursor-pointer">
+                  +
+                  <input
+                    type="file" accept="image/*" multiple className="hidden"
+                    onChange={(e) => {
+                      const picked = Array.from(e.target.files ?? []).slice(0, 5 - imageFiles.length);
+                      setImageFiles((prev) => [...prev, ...picked]);
+                      setImagePreviews((prev) => [...prev, ...picked.map((f) => URL.createObjectURL(f))]);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
               )}
             </div>
-            <input
-              type="file" accept="image/*" className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0] ?? null;
-                setImageFile(f);
-                setImagePreview(f ? URL.createObjectURL(f) : null);
-              }}
-            />
-          </label>
+          </div>
           <input
             value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Başlıq (məs. Valorant hesabı - Immortal)"
             className="w-full rounded-lg border border-line bg-bg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-jade"

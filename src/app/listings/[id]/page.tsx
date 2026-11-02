@@ -6,6 +6,7 @@ import BuyButton from "./buy-button";
 import ListingTabs from "./listing-tabs";
 import MessageUserButton from "../../message-user-button";
 import ShareButton from "../../share-button";
+import Gallery from "./gallery";
 import ReportListingButton from "./report-listing-button";
 
 export const dynamic = "force-dynamic";
@@ -53,6 +54,11 @@ export default async function ListingPage({
     .select("*", { count: "exact", head: true })
     .eq("seller_id", listing.seller_id)
     .eq("status", "completed");
+
+  const { data: extraImages } = await admin
+    .from("listing_images").select("url").eq("listing_id", listing.id).order("sort_order");
+  const galleryImages: string[] = (extraImages ?? []).map((r) => r.url);
+  if (galleryImages.length === 0 && listing.image_url) galleryImages.push(listing.image_url);
 
   let stockCount: number | null = null;
   if (listing.is_auto_delivery) {
@@ -117,11 +123,7 @@ export default async function ListingPage({
 
       <main className="max-w-3xl mx-auto px-6 py-12">
         <div className="rounded-2xl border border-line bg-panel overflow-hidden">
-          {listing.image_url && (
-            <div className="aspect-[16/9] bg-bg overflow-hidden">
-              <img src={listing.image_url} alt={listing.title} className="w-full h-full object-cover" />
-            </div>
-          )}
+          <Gallery images={galleryImages} title={listing.title} />
           <div className="p-8">
           <p className="text-[10px] uppercase tracking-widest text-mist mb-2">
             {(listing.categories as unknown as { name: string } | null)?.name ?? "Digər"}
