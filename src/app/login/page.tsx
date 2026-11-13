@@ -72,6 +72,7 @@ function LoginForm() {
           {loading ? "Yoxlanılır…" : "Daxil ol"}
         </button>
         <p className="text-sm text-mist text-center pt-1">Hesabınız yoxdur? <Link href="/signup" className="text-jade-soft underline underline-offset-4">Qeydiyyat</Link></p>
+        <p className="text-xs text-mist text-center"><Link href="/account-recovery" className="hover:text-paper underline underline-offset-4">Hesabıma girə bilmirəm / hesabım oğurlanıb</Link></p>
       </form>
     </div>
   );

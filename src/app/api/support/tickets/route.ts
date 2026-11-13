@@ -38,6 +38,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   report_user: "İstifadəçini report etmək",
   feedback: "Sayt haqqında fikir/tövsiyə",
   problem_encountered: "Problemlə qarşılaşmaq",
+  account_recovery: "Hesab qurtarma",
   other: "Digər",
 };
 

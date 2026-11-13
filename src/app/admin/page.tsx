@@ -99,6 +99,7 @@ export default async function AdminPage() {
       <header className="max-w-3xl mx-auto px-6 pt-8 flex items-center justify-between flex-wrap gap-3">
         <Link href="/dashboard" className="font-display text-lg">İtemBazar · Admin</Link>
         <nav className="flex items-center gap-3 text-sm">
+          <Link href="/admin/recovery" className="rounded-full border border-gold/40 px-3 py-1.5 text-gold hover:text-paper">Hesab qurtar</Link>
           <Link href="/admin/users" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">İstifadəçilər</Link>
           <Link href="/admin/orders" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">Sifarişlər ({activeOrdersCount ?? 0})</Link>
           <Link href="/admin/reports" className="rounded-full border border-line px-3 py-1.5 text-mist hover:text-paper">Report-lar ({openReportsCount ?? 0})</Link>

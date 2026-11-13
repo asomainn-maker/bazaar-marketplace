@@ -15,6 +15,7 @@ const CATEGORIES = [
   { key: "feedback", label: "Sayt haqqında fikir/tövsiyə" },
   { key: "buy_problem", label: "Elan alanda problem yaşamaq" },
   { key: "problem_encountered", label: "Problemlə qarşılaşmaq" },
+  { key: "account_recovery", label: "Hesabım oğurlanıb / hesab qurtarma" },
   { key: "other", label: "Digər" },
 ];
 

@@ -382,3 +382,17 @@ on conflict (key) do nothing;
 
 -- Çıxarışda komissiya göstəricisi
 alter table public.withdrawals add column if not exists net_amount numeric(12,2);
+
+-- Hesab qurtarma müraciətləri (giriş etmədən göndərilə bilər)
+create table if not exists public.recovery_requests (
+  id uuid primary key default gen_random_uuid(),
+  claimed_username text,
+  claimed_phone text,
+  claimed_email text,
+  contact_email text not null,
+  details text,
+  ip text,
+  status text not null default 'open' check (status in ('open','resolved','rejected')),
+  created_at timestamptz not null default now()
+);
+alter table public.recovery_requests enable row level security;
